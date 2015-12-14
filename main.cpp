@@ -35,7 +35,9 @@ int main()
     }
     cout << "features " << layer.features_size() << endl;
 
-    TileData TileData(vector_tile);
+    TileData tileData(vector_tile);
+
+    cout << tileData << endl;
 
     //cout << "Name: " << vector_tile->layer.name() << endl;
     google::protobuf::ShutdownProtobufLibrary();

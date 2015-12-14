@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <ostream>
 
 
 class TileLayer
@@ -10,6 +11,7 @@ class TileLayer
 public:
     TileLayer(std::string, uint32_t version, uint32_t extent);
     TileLayer(std::string name, uint32_t version);
+    friend std::ostream& operator<<(std::ostream&, const TileLayer&);
 
 
 private:

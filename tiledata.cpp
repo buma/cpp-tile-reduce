@@ -30,3 +30,14 @@ TileData::TileData(mapnik::vector::tile &vector_tile)
     }
 }
 
+std::ostream& operator<<(std::ostream& os, const TileData& tileData) {
+    os << "{ ";
+    for (auto&& layer: tileData.layers) {
+        os << layer.first << ":{" << std::endl;
+        os << *layer.second.get() << "}";
+    }
+    os << "}";
+    return os;
+
+}
+
