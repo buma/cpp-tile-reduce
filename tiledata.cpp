@@ -1,18 +1,18 @@
 #include <iostream>
+#include <memory>
 #include "tiledata.hpp"
 
 TileData::TileData(mapnik::vector::tile &vector_tile)
 {
-    //for(int i=0; i < vector_tile.layers_size(); i++) {
-    //    mapnik::vector::tile::layer layer = vector_tile.layers();
     for(auto&& layer : vector_tile.layers()) {
-        TileLayer tileLayer(layer.name(), layer.version());
+        std::unique_ptr<TileLayer> tileLayer(new TileLayer(layer.name(), layer.version()));
         for(auto&& feature : layer.features()) {
             assert(feature.tags_size() % 2 == 0);
             std::cerr << "FEATURE: " << feature.id() << " Type: " << feature.type() << std::endl;
             for(int idx=0; idx < feature.tags_size(); idx+=2) {
                 auto key = layer.keys(feature.tags(idx));
                 auto value_type = layer.values(feature.tags(idx+1));
+
                 std::cerr << " " << key << " " << value_type.DebugString() << " ";
                 if (value_type.has_double_value()) {
                     std::cerr << "D: " << value_type.double_value();
@@ -26,7 +26,7 @@ TileData::TileData(mapnik::vector::tile &vector_tile)
             //break;
 
         }
-        //layers[layer.name()] = tileLayer;
+        this->layers.insert(std::make_pair(layer.name(), std::move(tileLayer)));
     }
 }
 

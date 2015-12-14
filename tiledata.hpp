@@ -13,7 +13,7 @@ public:
     TileData(mapnik::vector::tile &vector_tile);
 
 private:
-    std::unordered_map<std::string, TileLayer> layers;
+    std::unordered_map<std::string, std::unique_ptr<TileLayer>> layers;
 
 
 };
