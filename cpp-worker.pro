@@ -9,7 +9,7 @@ SOURCES += main.cpp \
     tiledata.cpp \
     tilelayer.cpp
 
-INCLUDEPATH = /home/mabu/programiranje/cpp/libraries/msgpack-c/include libraries/zmq 
+INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include libraries/zmq /home/mabu/programiranje/cpp/variant/include
 
 LIBS += -lzmq -lprotobuf
 
