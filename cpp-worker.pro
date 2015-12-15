@@ -8,15 +8,18 @@ SOURCES += main.cpp \
     generated/vector_tile.pb.cc \
     tiledata.cpp \
     tilelayer.cpp \
-    tilefeature.cpp
+    tilefeature.cpp \
+    tippecanoe/decode.cc \
+    tippecanoe/projection.c
 
 INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include libraries/zmq
 
-LIBS += -lzmq -lprotobuf
+LIBS += -lzmq -lprotobuf -lm -lz
 
 HEADERS += \
     tiledata.hpp \
     generated/vector_tile.pb.hpp \
     tilelayer.hpp \
-    tilefeature.h
+    tilefeature.h \
+    tippecanoe/projection.h
 
