@@ -6,9 +6,20 @@ TileData::TileData(mapnik::vector::tile &vector_tile)
 {
     for(auto&& layer : vector_tile.layers()) {
         std::unique_ptr<TileLayer> tileLayer(new TileLayer(layer.name(), layer.version()));
-        for(auto&& feature : layer.features()) {
+
+        //Use https://github.com/mapbox/tippecanoe to get geometry
+        //std::unique_ptr<mapnik::vector::tile_layer> tile_ptr(layer.);
+        //tileLayer.get()->setLayer(std::move(tile_ptr));
+        tileLayer.get()->setLayer(&layer);
+        //FIXME: retarted way to insert features but OK for now
+        for(uint i=0; i < layer.features_size(); i++) {
+            tileLayer.get()->getFeature(i);
+            //break;
+        }
+        /*for(auto&& feature : layer.features()) {
             assert(feature.tags_size() % 2 == 0);
             std::cerr << "FEATURE: " << feature.id() << " Type: " << feature.type() << std::endl;
+
             for(int idx=0; idx < feature.tags_size(); idx+=2) {
                 auto key = layer.keys(feature.tags(idx));
                 auto value_type = layer.values(feature.tags(idx+1));
@@ -23,9 +34,9 @@ TileData::TileData(mapnik::vector::tile &vector_tile)
                 }
                 std::cerr << std::endl;
             }
-            //break;
+            break;
 
-        }
+        }*/
         this->layers.insert(std::make_pair(layer.name(), std::move(tileLayer)));
     }
 }
