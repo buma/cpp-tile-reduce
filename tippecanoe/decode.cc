@@ -4,7 +4,24 @@
 #include <string>
 #include <zlib.h>
 #include <math.h>
+#include <memory>
+#include <iostream>
 #include "generated/vector_tile.pb.hpp"
+#include "decode.hpp"
+
+#include <geos/geom/PrecisionModel.h>
+#include <geos/geom/GeometryFactory.h>
+#include <geos/geom/Geometry.h>
+#include <geos/geom/Point.h>
+#include <geos/geom/LinearRing.h>
+#include <geos/geom/LineString.h>
+#include <geos/geom/Polygon.h>
+#include <geos/geom/GeometryCollection.h>
+#include <geos/geom/Coordinate.h>
+#include <geos/geom/CoordinateSequence.h>
+#include <geos/geom/CoordinateArraySequence.h>
+
+#include <geos/io/WKTWriter.h>
 
 extern "C" {
 #include "projection.h"
@@ -88,26 +105,28 @@ struct draw {
 		this->lat = lat;
 	}
 };
-
 void handle(std::string message, int z, unsigned x, unsigned y, int describe) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
-	int within = 0;
 
 	// https://github.com/mapbox/mapnik-vector-tile/blob/master/examples/c%2B%2B/tileinfo.cpp
 	mapnik::vector::tile tile;
 
-    if (is_compressed(message)) {
-        std::string uncompressed;
-        decompress(message, uncompressed);
-        if (!tile.ParseFromString(uncompressed)) {
-            fprintf(stderr, "Couldn't decompress tile %d/%u/%u\n", z, x, y);
-            exit(EXIT_FAILURE);
-        }
-    } else if (!tile.ParseFromString(message)) {
-        fprintf(stderr, "Couldn't parse tile %d/%u/%u\n", z, x, y);
-        exit(EXIT_FAILURE);
-    }
+	if (is_compressed(message)) {
+		std::string uncompressed;
+		decompress(message, uncompressed);
+		if (!tile.ParseFromString(uncompressed)) {
+			fprintf(stderr, "Couldn't decompress tile %d/%u/%u\n", z, x, y);
+			exit(EXIT_FAILURE);
+		}
+	} else if (!tile.ParseFromString(message)) {
+		fprintf(stderr, "Couldn't parse tile %d/%u/%u\n", z, x, y);
+		exit(EXIT_FAILURE);
+	}
+	handle(tile, z, x, y, describe);
+}
 
+void handle(mapnik::vector::tile & tile, int z, unsigned x, unsigned y, int describe) {
+	int within = 0;
 	printf("{ \"type\": \"FeatureCollection\"");
 
 	if (describe) {
@@ -115,6 +134,13 @@ void handle(std::string message, int z, unsigned x, unsigned y, int describe) {
 	}
 
 	printf(", \"features\": [\n");
+	//precision model with default precision of floating
+	auto pm = new geos::geom::PrecisionModel(); //2.0, 0, 0);
+	//With unknown SRID (-1)
+	auto geometry_factory = new geos::geom::GeometryFactory(pm, -1);
+	auto wkt = new geos::io::WKTWriter();
+	delete pm;
+
 
 	for (int l = 0; l < tile.layers_size(); l++) {
 		mapnik::vector::tile_layer layer = tile.layers(l);
@@ -221,6 +247,10 @@ void handle(std::string message, int z, unsigned x, unsigned y, int describe) {
 			if (feat.type() == VT_POINT) {
 				if (ops.size() == 1) {
 					printf("\"type\": \"Point\", \"coordinates\": [ %f, %f ]", ops[0].lon, ops[0].lat);
+					auto point = geometry_factory->createPoint(geos::geom::Coordinate(ops[0].lon, ops[0].lat));
+					std::string tmp = wkt->write(point);
+					std::cout << tmp;
+
 				} else {
 					printf("\"type\": \"MultiPoint\", \"coordinates\": [ ");
 					for (unsigned i = 0; i < ops.size(); i++) {
@@ -241,12 +271,20 @@ void handle(std::string message, int z, unsigned x, unsigned y, int describe) {
 
 				if (movetos < 2) {
 					printf("\"type\": \"LineString\", \"coordinates\": [ ");
+					//std::vector<geos::geom::Coordinate> line_coor;
+					geos::geom::CoordinateArraySequence array_seq;
+					//line_coor.reserve(ops.size());
 					for (unsigned i = 0; i < ops.size(); i++) {
 						if (i != 0) {
 							printf(", ");
 						}
+						//line_coor.push_back(geos::geom::Coordinate(ops[i].lon, ops[i].lat));
+						array_seq.add(geos::geom::Coordinate(ops[i].lon, ops[i].lat));
 						printf("[ %f, %f ]", ops[i].lon, ops[i].lat);
 					}
+					auto linestring = geometry_factory->createLineString(array_seq);
+					std::cout << wkt->write(linestring);
+
 					printf(" ]");
 				} else {
 					printf("\"type\": \"MultiLineString\", \"coordinates\": [ [ ");

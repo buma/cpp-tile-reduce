@@ -4,6 +4,7 @@
 #include <msgpack.hpp>
 #include "generated/vector_tile.pb.hpp"
 #include "tiledata.hpp"
+#include "tippecanoe/decode.hpp"
 
 using namespace std;
 
@@ -35,9 +36,14 @@ int main()
     }
     cout << "features " << layer.features_size() << endl;
 
-    TileData tileData(vector_tile);
+    if (0) {
+            TileData tileData(vector_tile);
 
-    cout << tileData << endl;
+            cout << tileData << endl;
+    } else {
+            handle(vector_tile, 12,2225,1446,1);
+
+    }
 
     //cout << "Name: " << vector_tile->layer.name() << endl;
     google::protobuf::ShutdownProtobufLibrary();

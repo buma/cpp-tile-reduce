@@ -14,12 +14,13 @@ SOURCES += main.cpp \
 
 INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include libraries/zmq
 
-LIBS += -lzmq -lprotobuf -lm -lz
+LIBS += -lzmq -lprotobuf -lm -lz -lgeos
 
 HEADERS += \
     tiledata.hpp \
     generated/vector_tile.pb.hpp \
     tilelayer.hpp \
     tilefeature.h \
-    tippecanoe/projection.h
+    tippecanoe/projection.h \
+    tippecanoe/decode.hpp
 
