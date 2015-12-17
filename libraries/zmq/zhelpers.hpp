@@ -72,7 +72,10 @@
 #endif
 
 //  Provide random number from 0..(num-1)
-#define within(num) (int) ((float) (num) * random () / (RAND_MAX + 1.0))
+//define within(num) (int) ((float) (num) * random () / (RAND_MAX + 1.0))
+int within(long int num) {
+    return (int) ((float) (num) * random () / (RAND_MAX + 1.0));
+}
 
 //  Receive 0MQ string from socket and convert into string
 static std::string
