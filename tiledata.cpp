@@ -52,3 +52,7 @@ std::ostream& operator<<(std::ostream& os, const TileData& tileData) {
 
 }
 
+TileLayer const * TileData::getLayer(std::string layer) {
+    return this->layers.at(layer).get();
+}
+

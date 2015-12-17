@@ -87,4 +87,15 @@ std::ostream& operator<<(std::ostream &os, const TileLayer &tileLayer) {
     return os;
 }
 
+std::vector<TileFeature*>  TileLayer::filter(std::function<bool(TileFeature*)> fun) const {
+    std::vector<TileFeature*> result;
+    for(auto&& feature: this->features) {
+        if (fun(feature.get())) {
+            result.push_back(feature.get());
+        }
+    }
+    return result;
+
+}
+
 

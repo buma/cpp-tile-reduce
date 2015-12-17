@@ -7,9 +7,10 @@
 #include <memory>
 #include <vector>
 
-
+#include <functional>
 #include "tilefeature.h"
 #include "generated/vector_tile.pb.hpp"
+using namespace std::placeholders;
 
 
 class TileLayer
@@ -26,6 +27,7 @@ public:
 
     TileFeature* getFeature(uint n, int z, unsigned x, unsigned y);
     TileFeature* getFeature(uint n) const;
+    std::vector<TileFeature*>  filter(std::function<bool(TileFeature*)> fun) const;
 
 
 private:

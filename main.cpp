@@ -8,6 +8,9 @@
 
 using namespace std;
 
+bool filterStreet(const TileFeature * feature) {
+    return true;
+}
 
 int main()
 {
@@ -36,12 +39,13 @@ int main()
     }
     cout << "features " << layer.features_size() << endl;
 
-    if (0) {
-            TileData tileData(vector_tile);
+    if (1) {
+            TileData tileData(vector_tile, 12, 2225, 1446);
 
-            cout << tileData << endl;
+            cout << *tileData.getLayer("osm")->getFeature(1) << endl;
+            tileData.getLayer("osm")->filter(filterStreet);
     } else {
-            handle(vector_tile, 12,2225,1446,1);
+            //handle(vector_tile, 12,2225,1446,1);
 
     }
 
