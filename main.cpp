@@ -9,7 +9,12 @@
 using namespace std;
 
 bool filterStreet(const TileFeature * feature) {
-    return true;
+    return feature->hasTagValue("highway", "footway") &&
+            !feature->hasTagValue("footway", "sidewalk") &&
+            !feature->hasTagValue("footway", "crossing") &&
+            !feature->hasTagValue("area", "yes") &&
+            !feature->hasTag("area:highway") &&
+            !feature->hasTagValue("tunnel", "yes");
 }
 
 int main()
@@ -43,7 +48,11 @@ int main()
             TileData tileData(vector_tile, 12, 2225, 1446);
 
             cout << *tileData.getLayer("osm")->getFeature(1) << endl;
-            tileData.getLayer("osm")->filter(filterStreet);
+            auto footways = tileData.getLayer("osm")->filter(filterStreet);
+            cout << "Footways:" << endl;
+            for (auto&& footway: footways) {
+                cout << *footway;
+            }
     } else {
             //handle(vector_tile, 12,2225,1446,1);
 

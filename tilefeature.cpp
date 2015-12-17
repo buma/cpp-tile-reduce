@@ -39,3 +39,32 @@ std::ostream& operator<<(std::ostream& os, const TileFeature& tileFeature) {
     os << "}";
     return os;
 }
+
+bool TileFeature::hasTag(const std::string & key) const {
+    auto iter = this->string_tags.find(key);
+    if (iter != this->string_tags.end()) {
+        return true;
+    }
+    auto iterLong = this->long_tags.find(key);
+    if (iterLong != this->long_tags.end()) {
+        return true;
+    }
+    return false;
+}
+
+bool TileFeature::hasTagValue(const std::string &key, const std::string &value) const {
+    auto iter = this->string_tags.find(key);
+    if (iter != this->string_tags.end()) {
+        return (iter->second.compare(value) == 0);
+    }
+    return false;
+}
+
+std::string TileFeature::getTagValueString(const std::string &key) const {
+    auto iter = this->string_tags.find(key);
+    if (iter != this->string_tags.end()) {
+        return iter->second;
+    }
+    return "";
+
+}
