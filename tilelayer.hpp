@@ -24,7 +24,8 @@ public:
     //void setLayer(std::unique_ptr<mapnik::vector::tile_layer> tile_layer);
     void setLayer(const mapnik::vector::tile_layer *tile_layer);
 
-    TileFeature* getFeature(uint n);
+    TileFeature* getFeature(uint n, int z, unsigned x, unsigned y);
+    TileFeature* getFeature(uint n) const;
 
 
 private:

@@ -11,7 +11,7 @@
 class TileData
 {
 public:
-    TileData(mapnik::vector::tile &vector_tile);
+    TileData(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigned y);
     friend std::ostream& operator<<(std::ostream&, const TileData&);
 
 private:

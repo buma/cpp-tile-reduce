@@ -122,278 +122,189 @@ void handle(std::string message, int z, unsigned x, unsigned y, int describe) {
 		fprintf(stderr, "Couldn't parse tile %d/%u/%u\n", z, x, y);
 		exit(EXIT_FAILURE);
 	}
-	handle(tile, z, x, y, describe);
+    //handle(tile, z, x, y, describe);
 }
 
-void handle(mapnik::vector::tile & tile, int z, unsigned x, unsigned y, int describe) {
-	int within = 0;
-	printf("{ \"type\": \"FeatureCollection\"");
+std::unique_ptr<geos::geom::Geometry> handle(mapnik::vector::tile_feature & feat, int extent, int z, unsigned x, unsigned y, int describe) {
 
-	if (describe) {
-		printf(", \"properties\": { \"zoom\": %d, \"x\": %d, \"y\": %d }", z, x, y);
-	}
+    //precision model with default precision of floating
+    auto pm = new geos::geom::PrecisionModel(); //2.0, 0, 0);
+    //With unknown SRID (-1)
+    auto geometry_factory = new geos::geom::GeometryFactory(pm, 4326);
+    //auto wkt = new geos::io::WKTWriter();
+    delete pm;
 
-	printf(", \"features\": [\n");
-	//precision model with default precision of floating
-	auto pm = new geos::geom::PrecisionModel(); //2.0, 0, 0);
-	//With unknown SRID (-1)
-	auto geometry_factory = new geos::geom::GeometryFactory(pm, -1);
-	auto wkt = new geos::io::WKTWriter();
-	delete pm;
+    int px = 0, py = 0;
 
+    std::vector<draw> ops;
 
-	for (int l = 0; l < tile.layers_size(); l++) {
-		mapnik::vector::tile_layer layer = tile.layers(l);
-		int extent = layer.extent();
+    for (int g = 0; g < feat.geometry_size(); g++) {
+        uint32_t geom = feat.geometry(g);
+        uint32_t op = geom & 7;
+        uint32_t count = geom >> 3;
 
-		if (describe) {
-			if (l != 0) {
-				printf(",\n");
-			}
+        if (op == VT_MOVETO || op == VT_LINETO) {
+            for (unsigned k = 0; k < count; k++) {
+                px += dezig(feat.geometry(g + 1));
+                py += dezig(feat.geometry(g + 2));
+                g += 2;
 
-			printf("{ \"type\": \"FeatureCollection\"");
-			printf(", \"properties\": { \"layer\": ");
-			printq(layer.name().c_str());
-			printf(" }");
-			printf(", \"features\": [\n");
+                long long scale = 1LL << (32 - z);
+                long long wx = scale * x + (scale / extent) * (px + .5);
+                long long wy = scale * y + (scale / extent) * (py + .5);
 
-			within = 0;
-		}
+                double lat, lon;
+                tile2latlon(wx, wy, 32, &lat, &lon);
 
-		for (int f = 0; f < layer.features_size(); f++) {
-			mapnik::vector::tile_feature feat = layer.features(f);
-			int px = 0, py = 0;
+                ops.push_back(draw(op, lon, lat));
+            }
+        } else {
+            ops.push_back(draw(op, 0, 0));
+        }
+    }
 
-			if (within) {
-				printf(",\n");
-			}
-			within = 1;
+    if (feat.type() == VT_POINT) {
+        if (ops.size() == 1) {
+            //printf("\"type\": \"Point\", \"coordinates\": [ %f, %f ]", ops[0].lon, ops[0].lat);
+            auto point = geometry_factory->createPoint(geos::geom::Coordinate(ops[0].lon, ops[0].lat));
+            //std::string tmp = wkt->write(point);
+            //std::cout << tmp;
+            return std::unique_ptr<geos::geom::Geometry>(point);
 
-			printf("{ \"type\": \"Feature\"");
-			printf(", \"properties\": { ");
+        } else {
+            //printf("\"type\": \"MultiPoint\", \"coordinates\": [ ");
+            for (unsigned i = 0; i < ops.size(); i++) {
+                if (i != 0) {
+                    //printf(", ");
+                }
+                //printf("[ %f, %f ]", ops[i].lon, ops[i].lat);
+            }
+            //printf(" ]");
+        }
+    } else if (feat.type() == VT_LINE) {
+        int movetos = 0;
+        for (unsigned i = 0; i < ops.size(); i++) {
+            if (ops[i].op == VT_MOVETO) {
+                movetos++;
+            }
+        }
 
-			for (int t = 0; t + 1 < feat.tags_size(); t += 2) {
-				if (t != 0) {
-					printf(", ");
-				}
+        if (movetos < 2) {
+            //printf("\"type\": \"LineString\", \"coordinates\": [ ");
+            geos::geom::CoordinateArraySequence array_seq;
+            for (unsigned i = 0; i < ops.size(); i++) {
+                if (i != 0) {
+                    //printf(", ");
+                }
+                array_seq.add(geos::geom::Coordinate(ops[i].lon, ops[i].lat));
+                //printf("[ %f, %f ]", ops[i].lon, ops[i].lat);
+            }
+            auto linestring = geometry_factory->createLineString(array_seq);
+            //std::cout << wkt->write(linestring);
+            return std::unique_ptr<geos::geom::Geometry>(linestring);
 
-				const char *key = layer.keys(feat.tags(t)).c_str();
-				mapnik::vector::tile_value const &val = layer.values(feat.tags(t + 1));
+            //printf(" ]");
+        } else {
+            //printf("\"type\": \"MultiLineString\", \"coordinates\": [ [ ");
+            int state = 0;
+            for (unsigned i = 0; i < ops.size(); i++) {
+                if (ops[i].op == VT_MOVETO) {
+                    if (state == 0) {
+                        //printf("[ %f, %f ]", ops[i].lon, ops[i].lat);
+                        state = 1;
+                    } else {
+                        //printf(" ], [ ");
+                        //printf("[ %f, %f ]", ops[i].lon, ops[i].lat);
+                        state = 1;
+                    }
+                } else {
+                    //printf(", [ %f, %f ]", ops[i].lon, ops[i].lat);
+                }
+            }
+            //printf(" ] ]");
+        }
+    } else if (feat.type() == VT_POLYGON) {
+        std::vector<std::vector<draw> > rings;
+        std::vector<double> areas;
 
-				if (val.has_string_value()) {
-					printq(key);
-					printf(": ");
-					printq(val.string_value().c_str());
-				} else if (val.has_int_value()) {
-					printq(key);
-					printf(": %lld", (long long) val.int_value());
-				} else if (val.has_double_value()) {
-					printq(key);
-					double v = val.double_value();
-					if (v == (long long) v) {
-						printf(": %lld", (long long) v);
-					} else {
-						printf(": %g", v);
-					}
-				} else if (val.has_float_value()) {
-					printq(key);
-					double v = val.float_value();
-					if (v == (long long) v) {
-						printf(": %lld", (long long) v);
-					} else {
-						printf(": %g", v);
-					}
-				} else if (val.has_sint_value()) {
-					printq(key);
-					printf(": %lld", (long long) val.sint_value());
-				} else if (val.has_uint_value()) {
-					printq(key);
-					printf(": %lld", (long long) val.uint_value());
-				} else if (val.has_bool_value()) {
-					printq(key);
-					printf(": %s", val.bool_value() ? "true" : "false");
-				}
-			}
+        for (unsigned i = 0; i < ops.size(); i++) {
+            if (ops[i].op == VT_MOVETO) {
+                rings.push_back(std::vector<draw>());
+                areas.push_back(0);
+            }
 
-			printf(" }, \"geometry\": { ");
+            int n = rings.size() - 1;
+            if (n >= 0) {
+                rings[n].push_back(ops[i]);
+            }
+        }
 
-			std::vector<draw> ops;
+        int outer = 0;
 
-			for (int g = 0; g < feat.geometry_size(); g++) {
-				uint32_t geom = feat.geometry(g);
-				uint32_t op = geom & 7;
-				uint32_t count = geom >> 3;
+        for (unsigned i = 0; i < rings.size(); i++) {
+            double area = 0;
+            for (unsigned k = 0; k < rings[i].size(); k++) {
+                if (rings[i][k].op != VT_CLOSEPATH) {
+                    area += rings[i][k].lon * rings[i][(k + 1) % rings[i].size()].lat;
+                    area -= rings[i][k].lat * rings[i][(k + 1) % rings[i].size()].lon;
+                }
+            }
 
-				if (op == VT_MOVETO || op == VT_LINETO) {
-					for (unsigned k = 0; k < count; k++) {
-						px += dezig(feat.geometry(g + 1));
-						py += dezig(feat.geometry(g + 2));
-						g += 2;
+            areas[i] = area;
+            if (areas[i] <= 0 || i == 0) {
+                outer++;
+            }
 
-						long long scale = 1LL << (32 - z);
-						long long wx = scale * x + (scale / extent) * (px + .5);
-						long long wy = scale * y + (scale / extent) * (py + .5);
+            // //printf("area %f\n", area / .00000274 / .00000274);
+        }
 
-						double lat, lon;
-						tile2latlon(wx, wy, 32, &lat, &lon);
+        if (outer > 1) {
+            //printf("\"type\": \"MultiPolygon\", \"coordinates\": [ [ [ ");
+        } else {
+            //printf("\"type\": \"Polygon\", \"coordinates\": [ [ ");
+        }
 
-						ops.push_back(draw(op, lon, lat));
-					}
-				} else {
-					ops.push_back(draw(op, 0, 0));
-				}
-			}
+        int state = 0;
+        for (unsigned i = 0; i < rings.size(); i++) {
+            if (areas[i] <= 0) {
+                if (state != 0) {
+                    // new multipolygon
+                    //printf(" ] ], [ [ ");
+                }
+                state = 1;
+            }
 
-			if (feat.type() == VT_POINT) {
-				if (ops.size() == 1) {
-					printf("\"type\": \"Point\", \"coordinates\": [ %f, %f ]", ops[0].lon, ops[0].lat);
-					auto point = geometry_factory->createPoint(geos::geom::Coordinate(ops[0].lon, ops[0].lat));
-					std::string tmp = wkt->write(point);
-					std::cout << tmp;
+            if (state == 2) {
+                // new ring in the same polygon
+                //printf(" ], [ ");
+            }
 
-				} else {
-					printf("\"type\": \"MultiPoint\", \"coordinates\": [ ");
-					for (unsigned i = 0; i < ops.size(); i++) {
-						if (i != 0) {
-							printf(", ");
-						}
-						printf("[ %f, %f ]", ops[i].lon, ops[i].lat);
-					}
-					printf(" ]");
-				}
-			} else if (feat.type() == VT_LINE) {
-				int movetos = 0;
-				for (unsigned i = 0; i < ops.size(); i++) {
-					if (ops[i].op == VT_MOVETO) {
-						movetos++;
-					}
-				}
+            for (unsigned j = 0; j < rings[i].size(); j++) {
+                if (rings[i][j].op != VT_CLOSEPATH) {
+                    if (j != 0) {
+                        //printf(", ");
+                    }
 
-				if (movetos < 2) {
-					printf("\"type\": \"LineString\", \"coordinates\": [ ");
-					//std::vector<geos::geom::Coordinate> line_coor;
-					geos::geom::CoordinateArraySequence array_seq;
-					//line_coor.reserve(ops.size());
-					for (unsigned i = 0; i < ops.size(); i++) {
-						if (i != 0) {
-							printf(", ");
-						}
-						//line_coor.push_back(geos::geom::Coordinate(ops[i].lon, ops[i].lat));
-						array_seq.add(geos::geom::Coordinate(ops[i].lon, ops[i].lat));
-						printf("[ %f, %f ]", ops[i].lon, ops[i].lat);
-					}
-					auto linestring = geometry_factory->createLineString(array_seq);
-					std::cout << wkt->write(linestring);
+                    //printf("[ %f, %f ]", rings[i][j].lon, rings[i][j].lat);
+                } else {
+                    if (j != 0) {
+                        //printf(", ");
+                    }
 
-					printf(" ]");
-				} else {
-					printf("\"type\": \"MultiLineString\", \"coordinates\": [ [ ");
-					int state = 0;
-					for (unsigned i = 0; i < ops.size(); i++) {
-						if (ops[i].op == VT_MOVETO) {
-							if (state == 0) {
-								printf("[ %f, %f ]", ops[i].lon, ops[i].lat);
-								state = 1;
-							} else {
-								printf(" ], [ ");
-								printf("[ %f, %f ]", ops[i].lon, ops[i].lat);
-								state = 1;
-							}
-						} else {
-							printf(", [ %f, %f ]", ops[i].lon, ops[i].lat);
-						}
-					}
-					printf(" ] ]");
-				}
-			} else if (feat.type() == VT_POLYGON) {
-				std::vector<std::vector<draw> > rings;
-				std::vector<double> areas;
+                    //printf("[ %f, %f ]", rings[i][0].lon, rings[i][0].lat);
+                }
+            }
 
-				for (unsigned i = 0; i < ops.size(); i++) {
-					if (ops[i].op == VT_MOVETO) {
-						rings.push_back(std::vector<draw>());
-						areas.push_back(0);
-					}
+            state = 2;
+        }
 
-					int n = rings.size() - 1;
-					if (n >= 0) {
-						rings[n].push_back(ops[i]);
-					}
-				}
+        if (outer > 1) {
+            //printf(" ] ] ]");
+        } else {
+            //printf(" ] ]");
+        }
+    }
 
-				int outer = 0;
-
-				for (unsigned i = 0; i < rings.size(); i++) {
-					double area = 0;
-					for (unsigned k = 0; k < rings[i].size(); k++) {
-						if (rings[i][k].op != VT_CLOSEPATH) {
-							area += rings[i][k].lon * rings[i][(k + 1) % rings[i].size()].lat;
-							area -= rings[i][k].lat * rings[i][(k + 1) % rings[i].size()].lon;
-						}
-					}
-
-					areas[i] = area;
-					if (areas[i] <= 0 || i == 0) {
-						outer++;
-					}
-
-					// printf("area %f\n", area / .00000274 / .00000274);
-				}
-
-				if (outer > 1) {
-					printf("\"type\": \"MultiPolygon\", \"coordinates\": [ [ [ ");
-				} else {
-					printf("\"type\": \"Polygon\", \"coordinates\": [ [ ");
-				}
-
-				int state = 0;
-				for (unsigned i = 0; i < rings.size(); i++) {
-					if (areas[i] <= 0) {
-						if (state != 0) {
-							// new multipolygon
-							printf(" ] ], [ [ ");
-						}
-						state = 1;
-					}
-
-					if (state == 2) {
-						// new ring in the same polygon
-						printf(" ], [ ");
-					}
-
-					for (unsigned j = 0; j < rings[i].size(); j++) {
-						if (rings[i][j].op != VT_CLOSEPATH) {
-							if (j != 0) {
-								printf(", ");
-							}
-
-							printf("[ %f, %f ]", rings[i][j].lon, rings[i][j].lat);
-						} else {
-							if (j != 0) {
-								printf(", ");
-							}
-
-							printf("[ %f, %f ]", rings[i][0].lon, rings[i][0].lat);
-						}
-					}
-
-					state = 2;
-				}
-
-				if (outer > 1) {
-					printf(" ] ] ]");
-				} else {
-					printf(" ] ]");
-				}
-			}
-
-			printf(" } }\n");
-		}
-
-		if (describe) {
-			printf("] }\n");
-		}
-	}
-
-	printf("] }\n");
+    //printf(" } }\n");
+    return nullptr;
 }

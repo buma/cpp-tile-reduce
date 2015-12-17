@@ -2,7 +2,7 @@
 #include <memory>
 #include "tiledata.hpp"
 
-TileData::TileData(mapnik::vector::tile &vector_tile)
+TileData::TileData(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigned y)
 {
     for(auto&& layer : vector_tile.layers()) {
         std::unique_ptr<TileLayer> tileLayer(new TileLayer(layer.name(), layer.version()));
@@ -13,7 +13,7 @@ TileData::TileData(mapnik::vector::tile &vector_tile)
         tileLayer.get()->setLayer(&layer);
         //FIXME: retarted way to insert features but OK for now
         for(uint i=0; i < layer.features_size(); i++) {
-            tileLayer.get()->getFeature(i);
+            tileLayer.get()->getFeature(i,z,x,y);
             //break;
         }
         /*for(auto&& feature : layer.features()) {
