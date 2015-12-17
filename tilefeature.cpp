@@ -60,6 +60,16 @@ bool TileFeature::hasTagValue(const std::string &key, const std::string &value) 
     return false;
 }
 
+bool TileFeature::hasTagValue(const std::string & key, const std::set<std::string> & values) const {
+    auto iter = this->string_tags.find(key);
+    if (iter != this->string_tags.end()) {
+            auto iterValues = values.find(iter->second);
+            return (iterValues != values.end());
+    }
+    return false;
+
+}
+
 std::string TileFeature::getTagValueString(const std::string &key) const {
     auto iter = this->string_tags.find(key);
     if (iter != this->string_tags.end()) {

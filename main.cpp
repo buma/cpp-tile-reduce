@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <set>
 #include <zhelpers.hpp>
 #include <msgpack.hpp>
 #include "generated/vector_tile.pb.hpp"
@@ -8,13 +9,23 @@
 
 using namespace std;
 
+//bool filterStreet(const TileFeature * feature, const std::set<std::string> & values) {
 bool filterStreet(const TileFeature * feature) {
+        //TODO: create this outside a function
+        std::set<std::string> streetValues = {"paved",
+                "concrete",
+                "asphalt",
+                "concrete:plates",
+                "cobblestone",
+                "cobblestone:flattened",
+                "sett"};
     return feature->hasTagValue("highway", "footway") &&
             !feature->hasTagValue("footway", "sidewalk") &&
             !feature->hasTagValue("footway", "crossing") &&
             !feature->hasTagValue("area", "yes") &&
             !feature->hasTag("area:highway") &&
-            !feature->hasTagValue("tunnel", "yes");
+            !feature->hasTagValue("tunnel", "yes") &&
+            (!feature->hasTag("surface") || feature->hasTagValue("surface", streetValues));
 }
 
 int main()
@@ -48,6 +59,7 @@ int main()
             TileData tileData(vector_tile, 12, 2225, 1446);
 
             cout << *tileData.getLayer("osm")->getFeature(1) << endl;
+            //auto filterStreet1 = std::bind(filterStreet, std::placeholders::_1, streetValues);
             auto footways = tileData.getLayer("osm")->filter(filterStreet);
             cout << "Footways:" << endl;
             for (auto&& footway: footways) {
