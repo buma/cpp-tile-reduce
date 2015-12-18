@@ -1,6 +1,6 @@
 #include "tilefeature.h"
 #include <iostream>
-#include <geos/io/WKTWriter.h>
+
 #include <algorithm>
 
 TileFeature::TileFeature()
@@ -25,7 +25,6 @@ void TileFeature::addGeometry(std::unique_ptr<geos::geom::Geometry> geometry) {
 }
 
 std::ostream& operator<<(std::ostream& os, const TileFeature& tileFeature) {
-    auto wkt = new geos::io::WKTWriter();
     os << "{";
     for (auto&& pair: tileFeature.long_tags) {
         os << pair.first << ":" << pair.second << ", " << std::endl;
@@ -34,7 +33,7 @@ std::ostream& operator<<(std::ostream& os, const TileFeature& tileFeature) {
         os << pair.first << ":\"" << pair.second << "\"," << std::endl;
     }
     if (tileFeature.geometry) {
-        os << wkt->write(tileFeature.geometry.get()) << std::endl;
+        os << tileFeature.wkt.get()->write(tileFeature.geometry.get()) << std::endl;
     }
     os << "}";
     return os;
@@ -78,3 +77,5 @@ std::string TileFeature::getTagValueString(const std::string &key) const {
     return "";
 
 }
+
+std::unique_ptr<geos::io::WKTWriter> TileFeature::wkt = std::unique_ptr<geos::io::WKTWriter>(new geos::io::WKTWriter());

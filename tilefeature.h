@@ -6,6 +6,7 @@
 #include <set>
 #include <generated/vector_tile.pb.hpp>
 #include <geos/geom/Geometry.h>
+#include <geos/io/WKTWriter.h>
 
 class TileFeature
 {
@@ -22,6 +23,7 @@ private:
     std::unordered_map<std::string, unsigned long long int> long_tags;
     std::unordered_map<std::string, std::string> string_tags;
     std::unique_ptr<geos::geom::Geometry> geometry;
+    static std::unique_ptr<geos::io::WKTWriter> wkt;
 
 };
 
