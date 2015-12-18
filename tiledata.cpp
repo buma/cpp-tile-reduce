@@ -1,8 +1,13 @@
 #include <iostream>
 #include <memory>
 #include "tiledata.hpp"
+#include "tippecanoe/decode.hpp"
 
-TileData::TileData(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigned y)
+TileData::TileData(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigned y) {
+    this->init(vector_tile, z, x, y);
+}
+
+void TileData::init(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigned y)
 {
     for(auto&& layer : vector_tile.layers()) {
         std::unique_ptr<TileLayer> tileLayer(new TileLayer(layer.name(), layer.version()));
@@ -39,6 +44,12 @@ TileData::TileData(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigne
         }*/
         this->layers.insert(std::make_pair(layer.name(), std::move(tileLayer)));
     }
+}
+
+TileData::TileData(std::string & message, int z, unsigned x, unsigned y) {
+    mapnik::vector::tile tile;
+    handle(message, z, x, y, tile);
+    this->init(tile, z, x, y);
 }
 
 std::ostream& operator<<(std::ostream& os, const TileData& tileData) {

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <set>
+#include <sstream>
 #include <zhelpers.hpp>
 #include <msgpack.hpp>
 #include "generated/vector_tile.pb.hpp"
@@ -33,7 +34,11 @@ int main()
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     auto filename = "/home/mabu/programiranje/osm-qa/tile-reduce-python/out.mapbox";
 
-    mapnik::vector::tile vector_tile;
+    std::ifstream fs(filename, ios_base::binary | ios_base::in);
+    std::stringstream buffer;
+    buffer << fs.rdbuf();
+
+    /*mapnik::vector::tile vector_tile;
     fstream fs(filename, ios_base::binary | ios_base::in);
     if (!fs) {
         cerr << "File " << filename << " Not found" << endl;
@@ -54,9 +59,11 @@ int main()
         cout << "extent " << layer.extent() << endl;
     }
     cout << "features " << layer.features_size() << endl;
-
+*/
     if (1) {
-            TileData tileData(vector_tile, 12, 2225, 1446);
+            //TileData tileData(vector_tile, 12, 2225, 1446);
+            std::string message = buffer.str();
+            TileData tileData(message, 12, 2225, 1446);
 
             cout << *tileData.getLayer("osm")->getFeature(1) << endl;
             //auto filterStreet1 = std::bind(filterStreet, std::placeholders::_1, streetValues);

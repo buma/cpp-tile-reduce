@@ -105,11 +105,11 @@ struct draw {
 		this->lat = lat;
 	}
 };
-void handle(std::string message, int z, unsigned x, unsigned y, int describe) {
+void handle(std::string message, int z, unsigned x, unsigned y, mapnik::vector::tile &tile) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 
 	// https://github.com/mapbox/mapnik-vector-tile/blob/master/examples/c%2B%2B/tileinfo.cpp
-	mapnik::vector::tile tile;
+    //mapnik::vector::tile tile;
 
 	if (is_compressed(message)) {
 		std::string uncompressed;
