@@ -125,14 +125,7 @@ void handle(std::string message, int z, unsigned x, unsigned y, int describe) {
     //handle(tile, z, x, y, describe);
 }
 
-std::unique_ptr<geos::geom::Geometry> handle(mapnik::vector::tile_feature & feat, int extent, int z, unsigned x, unsigned y, int describe) {
-
-    //precision model with default precision of floating
-    auto pm = new geos::geom::PrecisionModel(); //2.0, 0, 0);
-    //With unknown SRID (-1)
-    auto geometry_factory = new geos::geom::GeometryFactory(pm, 4326);
-    //auto wkt = new geos::io::WKTWriter();
-    delete pm;
+std::unique_ptr<geos::geom::Geometry> handle(mapnik::vector::tile_feature & feat, int extent, int z, unsigned x, unsigned y,std::unique_ptr<geos::geom::GeometryFactory> && geometry_factory) {
 
     int px = 0, py = 0;
 

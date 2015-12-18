@@ -10,6 +10,8 @@
 #include <functional>
 #include "tilefeature.h"
 #include "generated/vector_tile.pb.hpp"
+#include <geos/geom/PrecisionModel.h>
+#include <geos/geom/GeometryFactory.h>
 using namespace std::placeholders;
 
 
@@ -38,6 +40,7 @@ private:
     //std::unique_ptr<mapnik::vector::tile_layer> protobuf_layer;
     const mapnik::vector::tile_layer * protobuf_layer;
     size_t features_size;
+    static std::unique_ptr<geos::geom::GeometryFactory> geometry_factory;
 
 };
 

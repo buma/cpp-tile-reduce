@@ -53,7 +53,7 @@ TileFeature *TileLayer::getFeature(uint n, int z, unsigned x, unsigned y) {
             }
             std::cerr << std::endl;*/
         }
-        auto geometry = handle(feature, this->extent, z, x, y, 0);
+        auto geometry = handle(feature, this->extent, z, x, y, std::move(TileLayer::geometry_factory));
         if (geometry) {
             tileFeature.get()->addGeometry(std::move(geometry));
         }
@@ -98,4 +98,6 @@ std::vector<TileFeature*>  TileLayer::filter(std::function<bool(TileFeature*)> f
 
 }
 
-
+//FIXME: 16byte memory leak here
+std::unique_ptr<geos::geom::GeometryFactory> TileLayer::geometry_factory = std::unique_ptr<geos::geom::GeometryFactory>(
+            new geos::geom::GeometryFactory(new geos::geom::PrecisionModel(), 4326));

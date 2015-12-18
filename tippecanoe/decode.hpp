@@ -4,9 +4,12 @@
 #include <string>
 #include "generated/vector_tile.pb.hpp"
 #include <geos/geom/Geometry.h>
+#include <geos/geom/PrecisionModel.h>
+#include <geos/geom/GeometryFactory.h>
 
 void handle(std::string message, int z, unsigned x, unsigned y, int describe);
-std::unique_ptr<geos::geom::Geometry> handle(mapnik::vector::tile_feature &tile, int extent, int z, unsigned x, unsigned y, int describe);
+std::unique_ptr<geos::geom::Geometry> handle(mapnik::vector::tile_feature &tile, int extent,
+                                             int z, unsigned x, unsigned y, std::unique_ptr<geos::geom::GeometryFactory> && geometry_factory);
 
 #endif // DECODE_HPP
 
