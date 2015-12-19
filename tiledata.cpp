@@ -17,7 +17,7 @@ void TileData::init(mapnik::vector::tile &vector_tile, int z, unsigned x, unsign
         //tileLayer.get()->setLayer(std::move(tile_ptr));
         tileLayer.get()->setLayer(&layer);
         //FIXME: retarted way to insert features but OK for now
-        for(uint i=0; i < layer.features_size(); i++) {
+        for(int i=0; i < layer.features_size(); i++) {
             tileLayer.get()->getFeature(i,z,x,y);
             //break;
         }
