@@ -78,12 +78,8 @@ std::ostream& operator<<(std::ostream &os, const TileLayer &tileLayer) {
     os << "TileLayer { " << std::endl << "name:" << tileLayer.name << ", "
               << "version:" << tileLayer.version << " ,"
               << "extent:" << tileLayer.extent << ", "
-              << "length:" << tileLayer.getNumFeatures() << ", "
-              << "features:[";
-    for (auto&& feature: tileLayer.features) {
-        os << *feature.get() << " , ";
-    }
-    os <<" ] }";
+              << "length:" << tileLayer.getNumFeatures() << "}";
+
     return os;
 }
 
