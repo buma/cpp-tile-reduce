@@ -6,6 +6,7 @@
 #include <ostream>
 #include <memory>
 #include <vector>
+#include <sstream>
 
 #include <functional>
 #include "tilefeature.h"
@@ -30,6 +31,11 @@ public:
     std::shared_ptr<TileFeature> getFeature(uint n, int z, unsigned x, unsigned y);
     std::shared_ptr<TileFeature> getFeature(uint n) const;
     std::vector<std::shared_ptr<TileFeature>>  filter(std::function<bool(TileFeature*)> fun) const;
+    std::string toString() const {
+        std::stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
 
 
 private:

@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <ostream>
+#include <sstream>
 #include "tilelayer.hpp"
 #include "generated/vector_tile.pb.hpp"
 
@@ -15,6 +16,11 @@ public:
     TileData(std::string &message, int z, unsigned x, unsigned y);
     friend std::ostream& operator<<(std::ostream&, const TileData&);
     std::shared_ptr<TileLayer> getLayer(std::string);
+    std::string toString() const {
+        std::stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
 
 private:
     std::unordered_map<std::string, std::shared_ptr<TileLayer>> layers;
