@@ -27,16 +27,16 @@ public:
     //void setLayer(std::unique_ptr<mapnik::vector::tile_layer> tile_layer);
     void setLayer(const mapnik::vector::tile_layer *tile_layer);
 
-    TileFeature* getFeature(uint n, int z, unsigned x, unsigned y);
-    TileFeature* getFeature(uint n) const;
-    std::vector<TileFeature*>  filter(std::function<bool(TileFeature*)> fun) const;
+    std::shared_ptr<TileFeature> getFeature(uint n, int z, unsigned x, unsigned y);
+    std::shared_ptr<TileFeature> getFeature(uint n) const;
+    std::vector<std::shared_ptr<TileFeature>>  filter(std::function<bool(TileFeature*)> fun) const;
 
 
 private:
     uint32_t extent;
     uint32_t version;
     std::string name;
-    std::vector<std::unique_ptr<TileFeature>> features;
+    std::vector<std::shared_ptr<TileFeature>> features;
     //std::unique_ptr<mapnik::vector::tile_layer> protobuf_layer;
     const mapnik::vector::tile_layer * protobuf_layer;
     size_t features_size;

@@ -4,11 +4,13 @@
 #include <unordered_map>
 #include <string>
 #include <set>
+#include <memory>
 #include <generated/vector_tile.pb.hpp>
 #include <geos/geom/Geometry.h>
 #include <geos/io/WKTWriter.h>
 
-class TileFeature
+
+class TileFeature : public std::enable_shared_from_this<TileFeature>
 {
 public:
     TileFeature();

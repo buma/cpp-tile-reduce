@@ -12,7 +12,7 @@ TileLayer::TileLayer(std::string name, uint32_t version, uint32_t extent)
 
 TileLayer::TileLayer(std::string name, uint32_t version) : TileLayer(name, version, 4096) {}
 
-TileFeature *TileLayer::getFeature(uint n) const {
+std::shared_ptr<TileFeature> TileLayer::getFeature(uint n) const {
     //n is bigger then number of features something is wrong
     if (n > this->features_size) {
         return nullptr;
@@ -22,10 +22,10 @@ TileFeature *TileLayer::getFeature(uint n) const {
         return nullptr;
     }
 
-    return this->features.at(n).get();
+    return this->features.at(n);
 }
 
-TileFeature *TileLayer::getFeature(uint n, int z, unsigned x, unsigned y) {
+std::shared_ptr<TileFeature> TileLayer::getFeature(uint n, int z, unsigned x, unsigned y) {
     //n is bigger then number of features something is wrong
     if (n > this->features_size) {
         return nullptr;
@@ -33,14 +33,14 @@ TileFeature *TileLayer::getFeature(uint n, int z, unsigned x, unsigned y) {
     //Not yet inserted
     if(n >= this->features.size()){
         auto feature = this->protobuf_layer->features(n);
-        std::unique_ptr<TileFeature> tileFeature(new TileFeature());
+        auto tileFeature = std::make_shared<TileFeature>();
         assert(feature.tags_size() % 2 == 0);
         //std::cerr << "FEATURE: " << feature.id() << " Type: " << feature.type() << std::endl;
 
         for(int idx=0; idx < feature.tags_size(); idx+=2) {
             auto key = this->protobuf_layer->keys(feature.tags(idx));
             auto value_type = this->protobuf_layer->values(feature.tags(idx+1));
-            tileFeature.get()->addTag(key, value_type);
+            tileFeature->addTag(key, value_type);
 
             /*
             std::cerr << " " << key << " " << value_type.DebugString() << " ";
@@ -55,12 +55,12 @@ TileFeature *TileLayer::getFeature(uint n, int z, unsigned x, unsigned y) {
         }
         auto geometry = handle(feature, this->extent, z, x, y, std::move(TileLayer::geometry_factory));
         if (geometry) {
-            tileFeature.get()->addGeometry(std::move(geometry));
+            tileFeature->addGeometry(std::move(geometry));
         }
         //this->features.insert(n, std::move(tileFeature));
         this->features.push_back(std::move(tileFeature));
     }
-    return this->features.at(n).get();
+    return this->features.at(n);
 }
 
 //void TileLayer::setLayer(std::unique_ptr<mapnik::vector::tile_layer> tile_layer) {
@@ -87,11 +87,11 @@ std::ostream& operator<<(std::ostream &os, const TileLayer &tileLayer) {
     return os;
 }
 
-std::vector<TileFeature*>  TileLayer::filter(std::function<bool(TileFeature*)> fun) const {
-    std::vector<TileFeature*> result;
+std::vector<std::shared_ptr<TileFeature>>  TileLayer::filter(std::function<bool(TileFeature*)> fun) const {
+    std::vector<std::shared_ptr<TileFeature>> result;
     for(auto&& feature: this->features) {
         if (fun(feature.get())) {
-            result.push_back(feature.get());
+            result.push_back(feature);
         }
     }
     return result;
