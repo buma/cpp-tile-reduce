@@ -1,115 +1,67 @@
 #include <iostream>
-#include <fstream>
-#include <set>
-#include <sstream>
-#include <zhelpers.hpp>
-#include <msgpack.hpp>
-#include "generated/vector_tile.pb.hpp"
-#include "tiledata.hpp"
-#include "tippecanoe/decode.hpp"
+#include <string>
+#include "docopt.h"
 
-using namespace std;
 
-//bool filterStreet(const TileFeature * feature, const std::set<std::string> & values) {
-bool filterStreet(const TileFeature * feature) {
-        //TODO: create this outside a function
-        std::set<std::string> streetValues = {"paved",
-                "concrete",
-                "asphalt",
-                "concrete:plates",
-                "cobblestone",
-                "cobblestone:flattened",
-                "sett"};
-    return feature->hasTagValue("highway", "footway") &&
-            !feature->hasTagValue("footway", "sidewalk") &&
-            !feature->hasTagValue("footway", "crossing") &&
-            !feature->hasTagValue("area", "yes") &&
-            !feature->hasTag("area:highway") &&
-            !feature->hasTagValue("tunnel", "yes") &&
-            (!feature->hasTag("surface") || feature->hasTagValue("surface", streetValues));
-}
 
-int main()
-{
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
-    auto filename = "/home/mabu/programiranje/osm-qa/tile-reduce-python/out.mapbox";
+static const char USAGE[] =
+R"(CPP worker
 
-    std::ifstream fs(filename, ios_base::binary | ios_base::in);
-    std::stringstream buffer;
-    buffer << fs.rdbuf();
 
-    /*mapnik::vector::tile vector_tile;
-    fstream fs(filename, ios_base::binary | ios_base::in);
-    if (!fs) {
-        cerr << "File " << filename << " Not found" << endl;
-    } else if(!vector_tile.ParseFromIstream(&fs)) {
-        cerr << "Failed to parse vector tile";
-        return -1;
+        Usage:
+          cpp-worker worker [zmq | output] <mbtiles>
+          cpp-worker server [zmq | output] <mbtiles>  [(--bbox <minLon> <minLat> <maxLon> <maxLat>)]
+          cpp-worker (-h | --help)
+          cpp-worker --version
+
+        Options:
+          -h --help   Show this screen.
+          --version   Show version.
+          --protocol  How does worker and server communicate. [default: zmq]
+)";
+
+
+int main(int argc, const char** argv) {
+    using std::stof;
+    using std::cout;
+    using std::endl;
+    std::map<std::string, docopt::value> args
+            = docopt::docopt(USAGE, {argv + 1, argv + argc}, true, "Tile reduce 0.1");
+    for (auto const & arg: args) {
+        std::cout << arg.first << " " << arg.second << std::endl;
     }
+    bool server = args["server"].asBool();
+    bool zmq = (args["output"].asBool() != true);
+    std::string filepath = args["<mbtiles>"].asString();
+    bool hasBBox = args["--bbox"].asBool();
+    std::cout << "Filepath: " << filepath << std::endl;
+    if (server) {
+        std::cout << "We are on server ";
 
-
-
-    cout << vector_tile.GetTypeName() << endl;
-
-    mapnik::vector::tile::layer layer = vector_tile.layers(0);
-
-    cout << "name " << layer.name() << endl;
-    cout << "version " << layer.version() << endl;
-    if (layer.has_extent()) {
-        cout << "extent " << layer.extent() << endl;
-    }
-    cout << "features " << layer.features_size() << endl;
-*/
-    if (1) {
-            //TileData tileData(vector_tile, 12, 2225, 1446);
-            std::string message = buffer.str();
-            TileData tileData(message, 12, 2225, 1446);
-
-            cout << *tileData.getLayer("osm")->getFeature(1) << endl;
-            //auto filterStreet1 = std::bind(filterStreet, std::placeholders::_1, streetValues);
-            auto footways = tileData.getLayer("osm")->filter(filterStreet);
-            cout << "Footways:" << endl;
-            for (auto&& footway: footways) {
-                cout << *footway;
-            }
     } else {
-            //handle(vector_tile, 12,2225,1446,1);
+        std::cout << "we are on client ";
+    }
+    if (zmq) {
+        std::cout << "with zmq ";
+    } else {
+        std::cout << "with stdin/out ";
+    }
+
+    if (server && hasBBox) {
+        cout << endl;
+        float minLon = stof(args["<minLon>"].asString());
+        float minLat = stof(args["<minLat>"].asString());
+        float maxLon = stof(args["<maxLon>"].asString());
+        float maxLat = stof(args["<maxLat>"].asString());
+
+        std::cout << "minLon: " << minLon << endl;
+        std::cout << "minLat: " << minLat << endl;
+        std::cout << "maxLon: " << maxLon << endl;
+        std::cout << "maxLat: " << maxLat << endl;
 
     }
 
-    //cout << "Name: " << vector_tile->layer.name() << endl;
-    google::protobuf::ShutdownProtobufLibrary();
+    std::cout << std::endl;
     return 0;
 }
 
-void worker() {
-    zmq::context_t context(1);
-
-    zmq::socket_t pull_socket(context, ZMQ_PULL);
-    pull_socket.connect("tcp://localhost:5555");
-
-    zmq::socket_t push_socket(context, ZMQ_PUSH);
-    push_socket.connect("tcp://localhost:6666");
-    cout << "Hello World!" << endl;
-    zmq::message_t message;
-
-    while(1) {
-
-        pull_socket.recv(&message);
-
-        msgpack::unpacked result = msgpack::unpack((const char*)message.data(), message.size());
-
-        msgpack::object deserialized = result.get();
-
-        cout << deserialized << endl;
-
-        msgpack::sbuffer sbuf;
-        int num = 22;
-        msgpack::pack(sbuf, num);
-        message.rebuild(sbuf.size());
-        memcpy(message.data(), sbuf.data(), sbuf.size());
-        push_socket.send(message);
-
-
-    }
-}

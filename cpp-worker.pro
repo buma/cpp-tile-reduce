@@ -13,9 +13,9 @@ SOURCES += main.cpp \
     tippecanoe/projection.c \
     mbtilereader.cpp
 
-INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include libraries/zmq
+INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include libraries/zmq /home/mabu/programiranje/cpp/docopt.cpp
 
-LIBS += -lzmq -lprotobuf -lm -lz -lgeos -lsqlite3
+LIBS += -lzmq -lprotobuf -lm -lz -lgeos -lsqlite3 -L/home/mabu/programiranje/cpp/docopt.cpp/build -ldocopt
 
 HEADERS += \
     tiledata.hpp \
