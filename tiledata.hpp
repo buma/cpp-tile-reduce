@@ -14,10 +14,10 @@ public:
     TileData(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigned y);
     TileData(std::string &message, int z, unsigned x, unsigned y);
     friend std::ostream& operator<<(std::ostream&, const TileData&);
-    TileLayer const * getLayer(std::string);
+    std::shared_ptr<TileLayer> getLayer(std::string);
 
 private:
-    std::unordered_map<std::string, std::unique_ptr<TileLayer>> layers;
+    std::unordered_map<std::string, std::shared_ptr<TileLayer>> layers;
     void init(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigned y);
 
 

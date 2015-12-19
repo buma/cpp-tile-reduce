@@ -10,7 +10,7 @@ TileData::TileData(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigne
 void TileData::init(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigned y)
 {
     for(auto&& layer : vector_tile.layers()) {
-        std::unique_ptr<TileLayer> tileLayer(new TileLayer(layer.name(), layer.version()));
+        auto tileLayer = std::make_shared<TileLayer>(layer.name(), layer.version());
 
         //Use https://github.com/mapbox/tippecanoe to get geometry
         //std::unique_ptr<mapnik::vector::tile_layer> tile_ptr(layer.);
@@ -42,7 +42,7 @@ void TileData::init(mapnik::vector::tile &vector_tile, int z, unsigned x, unsign
             break;
 
         }*/
-        this->layers.insert(std::make_pair(layer.name(), std::move(tileLayer)));
+        this->layers.emplace(layer.name(), tileLayer);
     }
 }
 
@@ -63,7 +63,7 @@ std::ostream& operator<<(std::ostream& os, const TileData& tileData) {
 
 }
 
-TileLayer const * TileData::getLayer(std::string layer) {
-    return this->layers.at(layer).get();
+std::shared_ptr<TileLayer> TileData::getLayer(std::string layer) {
+    return this->layers.at(layer);
 }
 

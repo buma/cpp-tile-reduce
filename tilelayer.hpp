@@ -15,7 +15,7 @@
 using namespace std::placeholders;
 
 
-class TileLayer
+class TileLayer : public std::enable_shared_from_this<TileLayer>
 {
 public:
     TileLayer(std::string, uint32_t version, uint32_t extent);
