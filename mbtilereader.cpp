@@ -1,6 +1,8 @@
 #include "mbtilereader.h"
 #include <iostream>
-
+extern "C" {
+    #include "tippecanoe/projection.h"
+}
 
 
 MBTileReader::MBTileReader(const std::string & filepath)
@@ -41,6 +43,37 @@ TileData* MBTileReader::get_tile(int z, unsigned x, unsigned y)
 
     sqlite3_finalize(stmt);
     return tileData;
+}
+
+/**
+ * @brief MBTileReader::get_tiles_inside
+ * @param zoom
+ * @param minLon
+ * @param minLat
+ * @param maxLon
+ * @param maxLat
+ *
+ * Returns list of x,y, zoom tuples of tiles inside provided coordinates
+ * @return
+ */
+std::forward_list<std::tuple<unsigned, unsigned,int>> MBTileReader::get_tiles_inside(
+        float minLon, float minLat, float maxLon, float maxLat, int zoom) {
+    std::forward_list<std::tuple<unsigned, unsigned,int>> tiles;
+    long long min_x_tile, min_y_tile, max_x_tile, max_y_tile;
+
+    latlon2tile(maxLat, minLon, zoom, &min_x_tile, &min_y_tile);
+    latlon2tile(minLat, maxLon, zoom, &max_x_tile, &max_y_tile);
+
+    std::cout << "(" << min_x_tile << " , " << min_y_tile << ")" << std::endl;
+    std::cout << "(" << max_x_tile << " , " << max_y_tile << ")" << std::endl;
+    //For zoom 12 unsigned is enough since there are 2^12x2^12 tiles
+    //but for zoom 16 there is 2^16 * 2^16 tiles
+    for(unsigned x_tile=min_x_tile; x_tile <= max_x_tile; x_tile++) {
+        for (unsigned y_tile=min_y_tile; y_tile <= max_y_tile; y_tile++) {
+            tiles.push_front(std::make_tuple(x_tile, y_tile, zoom));
+        }
+    }
+    return tiles;
 }
 
 const std::string MBTileReader::sql = "SELECT tile_data from tiles where zoom_level = ? and tile_column = ? and tile_row = ?;";

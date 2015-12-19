@@ -3,6 +3,8 @@
 #include <string>
 #include <memory>
 #include <sqlite3.h>
+#include <forward_list>
+#include <tuple>
 
 #include "tiledata.hpp"
 
@@ -12,6 +14,8 @@ class MBTileReader
 public:
     MBTileReader(const std::string & filepath);
     TileData* get_tile(int z, unsigned x, unsigned y);
+    std::forward_list<std::tuple<unsigned, unsigned,int>> get_tiles_inside(float minLon, float minLat, float maxLon, float maxLat, int zoom=12);
+
 
     ~MBTileReader()
     {
