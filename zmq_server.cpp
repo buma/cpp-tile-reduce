@@ -19,7 +19,7 @@ ZMQ_Server::ZMQ_Server(std::string filepath, float minLon, float minLat, float m
 void ZMQ_Server::run(bool start_workers, unsigned int workers) {
     if (workers == 0) {
         unsigned int n = std::thread::hardware_concurrency();
-        std::cout << n << "threads";
+        std::cout << n << "threads" << std::endl;
         if (n != 0) {
             workers = n;
         }
@@ -28,31 +28,35 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
     auto tile_location = this->tileList->begin();
 
 
-    /*CpperoMQ::PollItem poll_pull(ZMQ_POLLIN, pull_socket, [&]{collect_task();});
-    CpperoMQ::PollItem poll_push(ZMQ_POLLOUT, push_socket, [&]{start_new_task();});
+
     //CpperoMQ::PollItem poll_ctrl(ZMQ_POLLOUT, ctrl_socket, this->manage());
 
-    CpperoMQ::PollItem poll_pull_error(ZMQ_POLLERR, pull_socket, [&]{socket_error();});
-    CpperoMQ::PollItem poll_push_error(ZMQ_POLLERR, push_socket, [&]{socket_error();});*/
+
     //CpperoMQ::PollItem poll_ctrl_error(ZMQ_POLLERR, ctrl_socket, [&]{socket_error();});
 
 
     auto poll_push = CpperoMQ::isSendReady(push_socket, [&](){
+        if (tile_location == this->tileList->end()) {
+            std::cerr << "Sent all list" << std::endl;
+            return;
+        }
         auto tile = *tile_location;
-        std::cout << "S: " << current_tile << " tile ";
+        std::cout << "S: " << this->sent_tiles << " tile ";
         std::cout << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile) << std::endl;
         std::stringstream buffer;
 
-        buffer << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile);
+        //buffer << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile);
 
-        //msgpack::pack(buffer, tile);
+        msgpack::pack(buffer, tile);
 
         const std::string& tmp = buffer.str();
-        std::cout << "B:" << tmp << std::endl;
+        //std::cout << "B:" << tmp << std::endl;
         push_socket.send(CpperoMQ::OutgoingMessage(tmp.size(), tmp.data()));
         ++tile_location;
         this->sent_tiles++;
+        //std::cerr << "ST:" << this->sent_tiles << std::endl;
     });
+
 
     auto poll_pull = CpperoMQ::isReceiveReady(pull_socket, [&](){
 
@@ -60,30 +64,30 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
         while(more) {
             CpperoMQ::IncomingMessage inMsg;
             inMsg.receive(pull_socket, more);
-          /*  msgpack::unpacked result;
+            msgpack::unpacked result;
             msgpack::unpack(result, inMsg.charData(), inMsg.size());
             msgpack::object deserialized = result.get();
 
-            std::cout << "R:" << deserialized << std::endl;*/
-            std::cout << "R: " << inMsg.charData() << std::endl;
+            std::cout << "R: " << this->received_tiles << " " << deserialized << std::endl;
+            //std::cout << "R: " << inMsg.charData() << std::endl;
             this->received_tiles++;
         }
     });
 
-    CpperoMQ::Poller poller;
+
+    CpperoMQ::Poller poller(0);
     while(received_tiles < 4) {
-        poller.poll(poll_push, poll_pull);
+        if (this->sent_tiles <4) {
+            poller.poll(poll_push, poll_pull);
+        } else {
+            poller.poll(poll_pull);
+        }
+        //poller.poll(poll_push);
+        //break;
     }
     std::cout << "Sent: " << this->sent_tiles << std::endl;
     std::cout << "Rec: " << this->received_tiles << std::endl;
 
-
-
-
-    /*for (auto& const  tile: tileList) {
-        this->send_tile(tile);
-        this->
-    }*/
 }
 
 const char* ZMQ_Server::get_addr(int port,std::string host) {
