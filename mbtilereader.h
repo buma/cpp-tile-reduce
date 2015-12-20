@@ -7,8 +7,8 @@
 #include <tuple>
 
 #include "tiledata.hpp"
-
-typedef std::vector<std::tuple<unsigned, unsigned,int>> TileList;
+typedef std::tuple<unsigned, unsigned,int> TileTuple;
+typedef std::vector<TileTuple> TileList;
 
 
 class MBTileReader

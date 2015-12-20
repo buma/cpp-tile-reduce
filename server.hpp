@@ -12,12 +12,12 @@ public:
     size_t get_tiles_num() {
         return tileList->size();
     }
-
     virtual void run(bool start_workers=false, unsigned int workers=0) = 0;
+    TileTuple get_tile();
 protected:
     MBTileReader tileReader;
-
     std::shared_ptr<TileList> tileList;
+    decltype(tileList->begin()) tile_location;
 
 };
 

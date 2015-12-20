@@ -38,7 +38,6 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
         }
     }
     this->connect();
-    auto tile_location = this->tileList->begin();
 
     //Without this tasks get sent only to the first worker
     std::cout << "Press Enter when the workers are ready: " << std::endl;
@@ -54,25 +53,26 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
 
 
     auto poll_push = CpperoMQ::isSendReady(push_socket, [&](){
-        if (tile_location == this->tileList->end()) {
-            std::cerr << "Sent all list" << std::endl;
-            return;
+        try {
+            auto tile = this->get_tile();
+
+            std::cout << "S: " << this->sent_tiles << " tile ";
+            std::cout << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile) << std::endl;
+            std::stringstream buffer;
+
+            //buffer << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile);
+
+            msgpack::pack(buffer, tile);
+
+            const std::string& tmp = buffer.str();
+            //std::cout << "B:" << tmp << std::endl;
+            push_socket.send(CpperoMQ::OutgoingMessage(tmp.size(), tmp.data()));
+            //++tile_location;
+            this->sent_tiles++;
+            //std::cerr << "ST:" << this->sent_tiles << std::endl;
+        } catch (const std::range_error& e) {
+            std::cout << "End of tiles" << std::endl;
         }
-        auto tile = *tile_location;
-        std::cout << "S: " << this->sent_tiles << " tile ";
-        std::cout << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile) << std::endl;
-        std::stringstream buffer;
-
-        //buffer << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile);
-
-        msgpack::pack(buffer, tile);
-
-        const std::string& tmp = buffer.str();
-        //std::cout << "B:" << tmp << std::endl;
-        push_socket.send(CpperoMQ::OutgoingMessage(tmp.size(), tmp.data()));
-        ++tile_location;
-        this->sent_tiles++;
-        //std::cerr << "ST:" << this->sent_tiles << std::endl;
     });
 
 
