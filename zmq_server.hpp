@@ -13,7 +13,9 @@ public:
         TCP,
         IPC
     };
-    ZMQ_Server(std::string filepath, float minLon=-1, float minLat=-1, float maxLon=-1, float maxLat=-1, int zoom=12,
+    ZMQ_Server(float minLon=-1, float minLat=-1, float maxLon=-1, float maxLat=-1, int zoom=12,
+               Transport _transport=Transport::TCP);
+    ZMQ_Server(std::string filepath, int zoom=12,
                Transport _transport=Transport::TCP);
     void run(bool start_workers=false, unsigned int workers=0) override;
 

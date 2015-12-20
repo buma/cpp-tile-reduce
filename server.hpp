@@ -7,7 +7,12 @@
 class Server
 {
 public:
-    Server(std::string filepath, float minLon=-1, float minLat=-1, float maxLon=-1, float maxLat=-1, int zoom=12);
+    Server(std::string filepath, int zoom=12);
+    Server(float minLon=-1, float minLat=-1, float maxLon=-1, float maxLat=-1, int zoom=12);
+    size_t get_tiles_num() {
+        return tileList->size();
+    }
+
     virtual void run(bool start_workers=false, unsigned int workers=0) = 0;
 protected:
     MBTileReader tileReader;
