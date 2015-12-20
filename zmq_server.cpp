@@ -76,8 +76,8 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
 
 
     CpperoMQ::Poller poller(0);
-    while(received_tiles < 4) {
-        if (this->sent_tiles <4) {
+    while(received_tiles < this->tileList->size()) {
+        if (this->sent_tiles < this->tileList->size()) {
             poller.poll(poll_push, poll_pull);
         } else {
             poller.poll(poll_pull);

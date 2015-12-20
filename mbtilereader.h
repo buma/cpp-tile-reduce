@@ -3,12 +3,12 @@
 #include <string>
 #include <memory>
 #include <sqlite3.h>
-#include <forward_list>
+#include <vector>
 #include <tuple>
 
 #include "tiledata.hpp"
 
-typedef std::forward_list<std::tuple<unsigned, unsigned,int>> TileList;
+typedef std::vector<std::tuple<unsigned, unsigned,int>> TileList;
 
 
 class MBTileReader
