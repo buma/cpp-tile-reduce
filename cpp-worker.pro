@@ -11,9 +11,11 @@ SOURCES += main.cpp \
     tilefeature.cpp \
     tippecanoe/decode.cc \
     tippecanoe/projection.c \
-    mbtilereader.cpp
+    mbtilereader.cpp \
+    server.cpp \
+    zmq_server.cpp
 
-INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include libraries/zmq /home/mabu/programiranje/cpp/docopt.cpp
+INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include /home/mabu/programiranje/cpp/CpperoMQ/include /home/mabu/programiranje/cpp/docopt.cpp
 
 LIBS += -lzmq -lprotobuf -lm -lz -lgeos -lsqlite3 -L/home/mabu/programiranje/cpp/docopt.cpp/build -ldocopt
 
@@ -24,5 +26,7 @@ HEADERS += \
     tilefeature.h \
     tippecanoe/projection.h \
     tippecanoe/decode.hpp \
-    mbtilereader.h
+    mbtilereader.h \
+    zmq_server.hpp \
+    server.hpp
 

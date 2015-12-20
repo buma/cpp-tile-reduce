@@ -8,13 +8,15 @@
 
 #include "tiledata.hpp"
 
+typedef std::forward_list<std::tuple<unsigned, unsigned,int>> TileList;
+
 
 class MBTileReader
 {
 public:
     MBTileReader(const std::string & filepath);
     TileData* get_tile(int z, unsigned x, unsigned y);
-    std::forward_list<std::tuple<unsigned, unsigned,int>> get_tiles_inside(float minLon, float minLat, float maxLon, float maxLat, int zoom=12);
+    TileList get_tiles_inside(float minLon, float minLat, float maxLon, float maxLat, int zoom=12);
 
 
     ~MBTileReader()

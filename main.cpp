@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <cstdlib>
 #include "docopt.h"
+#include "zmq_server.hpp"
 
 
 
@@ -33,6 +36,13 @@ int main(int argc, const char** argv) {
     bool server = args["server"].asBool();
     bool zmq = (args["output"].asBool() != true);
     std::string filepath = args["<mbtiles>"].asString();
+
+    std::ifstream f(filepath);
+    if (!f.good()) {
+        f.close();
+        std::cerr << "File " << filepath << " doesn't exists!";
+        std::exit(EXIT_FAILURE);
+    }
     bool hasBBox = args["--bbox"].asBool();
     std::cout << "Filepath: " << filepath << std::endl;
     if (server) {
@@ -58,6 +68,11 @@ int main(int argc, const char** argv) {
         std::cout << "minLat: " << minLat << endl;
         std::cout << "maxLon: " << maxLon << endl;
         std::cout << "maxLat: " << maxLat << endl;
+
+        std::unique_ptr<Server> server = std::unique_ptr<Server>(new ZMQ_Server(filepath, minLon, minLat, maxLon, maxLat));
+        server->run();
+
+
 
     }
 

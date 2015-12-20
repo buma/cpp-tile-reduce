@@ -56,9 +56,9 @@ TileData* MBTileReader::get_tile(int z, unsigned x, unsigned y)
  * Returns list of x,y, zoom tuples of tiles inside provided coordinates
  * @return
  */
-std::forward_list<std::tuple<unsigned, unsigned,int>> MBTileReader::get_tiles_inside(
+TileList MBTileReader::get_tiles_inside(
         float minLon, float minLat, float maxLon, float maxLat, int zoom) {
-    std::forward_list<std::tuple<unsigned, unsigned,int>> tiles;
+    TileList tiles;
     long long min_x_tile, min_y_tile, max_x_tile, max_y_tile;
 
     latlon2tile(maxLat, minLon, zoom, &min_x_tile, &min_y_tile);
