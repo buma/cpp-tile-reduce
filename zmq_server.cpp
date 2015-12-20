@@ -5,10 +5,10 @@
 
 ZMQ_Server::ZMQ_Server(std::string filepath, float minLon, float minLat, float maxLon, float maxLat, int zoom, ZMQ_Server::Transport transport)
     : Server(filepath, minLon, minLat, maxLon, maxLat, zoom),
+      _transport(transport),
       pull_socket(this->context.createPullSocket()),
       push_socket(this->context.createPushSocket()),
       ctrl_socket(this->context.createRouterSocket()),
-      _transport(transport),
       sent_tiles(0), received_tiles(0), current_tile(0)
 {
 
