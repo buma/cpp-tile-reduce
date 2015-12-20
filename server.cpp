@@ -22,11 +22,12 @@ Server::Server(std::string filepath, int zoom)
  */
 TileTuple Server::get_tile() {
     //TODO: fix copies
-    TileTuple tileTuple = *this->tile_location;
-    ++tile_location;
     if (this->tile_location == this->tileList->end()) {
         throw std::range_error("No more tiles");
     }
+    TileTuple tileTuple = *this->tile_location;
+    ++tile_location;
+
     return tileTuple;
 
 

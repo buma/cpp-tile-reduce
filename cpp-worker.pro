@@ -13,7 +13,9 @@ SOURCES += main.cpp \
     tippecanoe/projection.c \
     mbtilereader.cpp \
     server.cpp \
-    zmq_server.cpp
+    zmq_server.cpp \
+    worker.cpp \
+    zmq_worker.cpp
 
 INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include /home/mabu/programiranje/cpp/CpperoMQ/include /home/mabu/programiranje/cpp/docopt.cpp
 
@@ -28,5 +30,8 @@ HEADERS += \
     tippecanoe/decode.hpp \
     mbtilereader.h \
     zmq_server.hpp \
-    server.hpp
+    server.hpp \
+    worker.hpp \
+    zmq_worker.hpp \
+    utils.hpp
 

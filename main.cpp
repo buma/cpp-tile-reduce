@@ -1,9 +1,11 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <csignal>
 #include <cstdlib>
 #include "docopt.h"
 #include "zmq_server.hpp"
+#include "zmq_worker.hpp"
 
 
 
@@ -22,18 +24,27 @@ R"(CPP worker
           --version   Show version.
           --protocol  How does worker and server communicate. [default: zmq]
 )";
+std::unique_ptr<Worker> worker;
 
+void signal_handler(int signal) {
+    if (worker) {
+        std::cout << "finish" << std::endl;
+        worker->info();
+    }
+    std::exit(0);
+}
 
 int main(int argc, const char** argv) {
     using std::stof;
     using std::cout;
     using std::endl;
+    std::signal(SIGINT, signal_handler);
     std::map<std::string, docopt::value> args
             = docopt::docopt(USAGE, {argv + 1, argv + argc}, true, "Tile reduce 0.1");
     for (auto const & arg: args) {
         std::cout << arg.first << " " << arg.second << std::endl;
     }
-    bool server = args["server"].asBool();
+    bool is_server = args["server"].asBool();
     bool zmq = (args["output"].asBool() != true);
     bool hasBBox = args["--bbox"].asBool();
     std::string filepath;
@@ -49,7 +60,7 @@ int main(int argc, const char** argv) {
 
         std::cout << "Filepath: " << filepath << std::endl;
     }
-    if (server) {
+    if (is_server) {
         std::cout << "We are on server ";
 
     } else {
@@ -61,7 +72,8 @@ int main(int argc, const char** argv) {
         std::cout << "with stdin/out ";
     }
 
-    if (server) {
+    std::cout << std::endl;
+    if (is_server) {
         std::unique_ptr<Server> server;
         if(hasBBox) {
             cout << endl;
@@ -81,6 +93,10 @@ int main(int argc, const char** argv) {
         std::cout << std::endl << "Tiles:" << server->get_tiles_num() << std::endl;
         server->run();
 
+    } else {
+
+        std::unique_ptr<Worker> worker = std::unique_ptr<Worker>(new ZMQ_Worker(filepath));
+        worker->run();
     }
 
     std::cout << std::endl;

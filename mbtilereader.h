@@ -16,7 +16,7 @@ class MBTileReader
 public:
     MBTileReader();
     MBTileReader(const std::string & filepath);
-    TileData* get_tile(int z, unsigned x, unsigned y);
+    std::unique_ptr<TileData> get_tile(int z, unsigned x, unsigned y);
     static TileList get_tiles_inside_bbox(float minLon, float minLat, float maxLon, float maxLat, int zoom=12);
     TileList get_all_tiles(int zoom=-1) const;
 

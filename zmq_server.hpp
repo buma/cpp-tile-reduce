@@ -4,6 +4,7 @@
 #include <CpperoMQ/All.hpp>
 #include <CpperoMQ/OutgoingMessage.hpp>
 #include <CpperoMQ/IncomingMessage.hpp>
+#include "utils.hpp"
 
 
 class ZMQ_Server : public Server

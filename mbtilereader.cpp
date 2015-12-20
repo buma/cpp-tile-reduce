@@ -20,9 +20,10 @@ MBTileReader::MBTileReader()
     this->db = nullptr;
 }
 
-TileData* MBTileReader::get_tile(int z, unsigned x, unsigned y)
+std::unique_ptr<TileData> MBTileReader::get_tile(int z, unsigned x, unsigned y)
 {
-    TileData* tileData;
+    std::unique_ptr<TileData> tileData;
+    //std::cerr << "get_tile (z,x,y) " << z << " " << x << " " << y << std::endl;
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(this->db, MBTileReader::sql.c_str(), -1, &stmt, NULL) != SQLITE_OK) {
         fprintf(stderr, "%s: select failed: %s\n", this->filename.c_str(), sqlite3_errmsg(db));
@@ -41,9 +42,9 @@ TileData* MBTileReader::get_tile(int z, unsigned x, unsigned y)
             fprintf(stderr, "%s: Warning: using tile %d/%u/%u instead of %d/%u/%u\n", fname, z, x, y, oz, ox, oy);
         }*/
 
-        std::cerr << "LEN" << len << std::endl;
+        //std::cerr << "LEN" << len << std::endl;
         auto data = std::string(s, len);
-        tileData = new TileData(data, z, x, y);
+        tileData = std::unique_ptr<TileData>(new TileData(data, z, x, y));
     }
 
     sqlite3_finalize(stmt);
