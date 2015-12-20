@@ -80,15 +80,15 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
     });
 
 
-    CpperoMQ::Poller poller(0);
+    CpperoMQ::Poller poller(-1); //-1 waits indefinitely until there is something to sent/receive which means less CPU usage
+    //until we didn't receive all the responses
     while(received_tiles < this->tileList->size()) {
+        //If we sent all tiles we don't need to poll on send socket anymore
         if (this->sent_tiles < this->tileList->size()) {
             poller.poll(poll_push, poll_pull);
         } else {
             poller.poll(poll_pull);
         }
-        //poller.poll(poll_push);
-        //break;
     }
     std::cout << "Sent: " << this->sent_tiles << std::endl;
     std::cout << "Rec: " << this->received_tiles << std::endl;
@@ -115,7 +115,9 @@ const std::string ZMQ_Server::get_addr(int port,std::string host) const {
 }
 
 void ZMQ_Server::connect() {
+    this->push_socket.setSendHighWaterMark(2);
     this->pull_socket.bind(this->get_addr(6666).c_str());
+
     this->push_socket.bind(this->get_addr(5555).c_str());
     this->ctrl_socket.bind(this->get_addr(7777).c_str());
 
