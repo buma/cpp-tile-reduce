@@ -31,7 +31,7 @@ private:
     uint sent_tiles,received_tiles,current_tile;
 
     void connect();
-    const char *get_addr(int port,std::string host="127.0.0.1");
+    const std::string get_addr(int port,std::string host="127.0.0.1") const;
     void collect_task();
     void start_new_task();
     void manage();

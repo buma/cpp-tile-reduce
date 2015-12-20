@@ -90,26 +90,28 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
 
 }
 
-const char* ZMQ_Server::get_addr(int port,std::string host) {
-    std::stringstream ss;
+const std::string ZMQ_Server::get_addr(int port,std::string host) const {
+    std::string tmp;
     switch (this->_transport) {
     case Transport::IPC:
-        ss << "ipc://" << host << ".zmq";
+        //ss << "ipc://" << host << ".zmq";
+        tmp = "ipc://" + host + ".zmq";
         break;
     case Transport::TCP:
     default:
-        ss << "tcp://" << host << ":" << port;
+        //ss << "tcp://" << host << ":" << port;
+        tmp = "tcp://" + host + ":" + std::to_string(port);
         break;
     }
-    const std::string& tmp = ss.str();
-    std::cerr << "Adress: " << tmp.c_str() << std::endl;
-    return tmp.c_str();
+    //const std::string& tmp = ss.str();
+    std::cerr << "Adress: " << tmp << std::endl;
+    return tmp;
 }
 
 void ZMQ_Server::connect() {
-    this->pull_socket.bind(this->get_addr(6666));
-    this->push_socket.bind(this->get_addr(5555));
-    this->ctrl_socket.bind(this->get_addr(7777));
+    this->pull_socket.bind(this->get_addr(6666).c_str());
+    this->push_socket.bind(this->get_addr(5555).c_str());
+    this->ctrl_socket.bind(this->get_addr(7777).c_str());
 
 }
 
