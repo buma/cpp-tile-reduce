@@ -95,7 +95,8 @@ const std::string ZMQ_Server::get_addr(int port,std::string host) const {
     switch (this->_transport) {
     case Transport::IPC:
         //ss << "ipc://" << host << ".zmq";
-        tmp = "ipc://" + host + ".zmq";
+        host = "socket";
+        tmp = "ipc://" + host + "_" + std::to_string(port) + ".zmq";
         break;
     case Transport::TCP:
     default:
