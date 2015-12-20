@@ -27,6 +27,11 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
     this->connect();
     auto tile_location = this->tileList->begin();
 
+    //Without this tasks get sent only to the first worker
+    std::cout << "Press Enter when the workers are ready: " << std::endl;
+    getchar();
+    std::cout << "Sending tasks to workers...\n" << std::endl;
+
 
 
     //CpperoMQ::PollItem poll_ctrl(ZMQ_POLLOUT, ctrl_socket, this->manage());
