@@ -37,7 +37,8 @@ void ZMQ_Worker::run() {
                 if (tileData) {
                     map(std::move(tileData));
                 } else {
-                    std::cerr << "Problems reading tile!" << std::endl;
+                    //std::cerr << "Problems reading tile!" << std::endl;
+                    push_socket.send(CpperoMQ::OutgoingMessage());
                 }
             } catch(const msgpack::type_error e) {
                 std::cerr << "Received wrong tuple: " << deserialized << std::endl;

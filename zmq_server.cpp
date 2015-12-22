@@ -84,11 +84,21 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
         while(more) {
             CpperoMQ::IncomingMessage inMsg;
             inMsg.receive(pull_socket, more);
-            msgpack::unpacked result;
-            msgpack::unpack(result, inMsg.charData(), inMsg.size());
-            msgpack::object deserialized = result.get();
+            //Client sends empty message if it failed to decode anything
+            if (inMsg.size() > 0) {
+                msgpack::unpacked result;
+                msgpack::unpack(result, inMsg.charData(), inMsg.size());
+                msgpack::object deserialized = result.get();
 
-            std::cout << "R: " << this->received_tiles << " " << deserialized << std::endl;
+                int number;
+                deserialized.convert(&number);
+
+                sum+=number;
+
+                //std::cout << "R: " << this->received_tiles << " " << deserialized << std::endl;
+            } else {
+                //std::cout << "R: EMPTY MESSAGE" << std::endl;
+            }
             //std::cout << "R: " << inMsg.charData() << std::endl;
             this->received_tiles++;
         }
