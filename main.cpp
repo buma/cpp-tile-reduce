@@ -5,7 +5,9 @@
 #include <cstdlib>
 #include "docopt.h"
 #include "zmq_server.hpp"
+#include "stdout_server.hpp"
 #include "zmq_worker.hpp"
+#include "stdout_worker.hpp"
 
 
 
@@ -16,6 +18,7 @@ R"(CPP worker
         Usage:
           cpp-worker worker [zmq | output] <mbtiles>
           cpp-worker server [zmq | output] (<mbtiles> | (--bbox <minLon> <minLat> <maxLon> <maxLat>))
+          cpp-worker collector
           cpp-worker (-h | --help)
           cpp-worker --version
 
@@ -36,19 +39,20 @@ void signal_handler(int signal) {
 
 int main(int argc, const char** argv) {
     using std::stof;
-    using std::cout;
+    using std::cerr;
     using std::endl;
     std::signal(SIGINT, signal_handler);
     std::map<std::string, docopt::value> args
             = docopt::docopt(USAGE, {argv + 1, argv + argc}, true, "Tile reduce 0.1");
     for (auto const & arg: args) {
-        std::cout << arg.first << " " << arg.second << std::endl;
+        std::cerr << arg.first << " " << arg.second << std::endl;
     }
     bool is_server = args["server"].asBool();
+    bool is_worker = args["worker"].asBool();
     bool zmq = (args["output"].asBool() != true);
     bool hasBBox = args["--bbox"].asBool();
     std::string filepath;
-    if (!hasBBox) {
+    if (!hasBBox && (is_server || is_worker)) {
         filepath = args["<mbtiles>"].asString();
 
         std::ifstream f(filepath);
@@ -58,48 +62,72 @@ int main(int argc, const char** argv) {
             std::exit(EXIT_FAILURE);
         }
 
-        std::cout << "Filepath: " << filepath << std::endl;
+        std::cerr << "Filepath: " << filepath << std::endl;
     }
     if (is_server) {
-        std::cout << "We are on server ";
+        std::cerr << "We are on server ";
 
     } else {
-        std::cout << "we are on client ";
+        std::cerr << "we are on client ";
     }
     if (zmq) {
-        std::cout << "with zmq ";
+        std::cerr << "with zmq ";
     } else {
-        std::cout << "with stdin/out ";
+        std::cerr << "with stdin/out ";
     }
 
-    std::cout << std::endl;
+    std::cerr << std::endl;
     if (is_server) {
         std::unique_ptr<Server> server;
         if(hasBBox) {
-            cout << endl;
+            cerr << endl;
             float minLon = stof(args["<minLon>"].asString());
             float minLat = stof(args["<minLat>"].asString());
             float maxLon = stof(args["<maxLon>"].asString());
             float maxLat = stof(args["<maxLat>"].asString());
 
-            std::cout << "minLon: " << minLon << endl;
-            std::cout << "minLat: " << minLat << endl;
-            std::cout << "maxLon: " << maxLon << endl;
-            std::cout << "maxLat: " << maxLat << endl;
-            server = std::unique_ptr<Server>(new ZMQ_Server(minLon, minLat, maxLon, maxLat));
+            std::cerr << "minLon: " << minLon << endl;
+            std::cerr << "minLat: " << minLat << endl;
+            std::cerr << "maxLon: " << maxLon << endl;
+            std::cerr << "maxLat: " << maxLat << endl;
+            if (zmq) {
+                server = std::unique_ptr<Server>(new ZMQ_Server(minLon, minLat, maxLon, maxLat, 12, ZMQ_Server::Transport::TCP));
+            } else {
+                server = std::unique_ptr<Server>(new Stdout_Server(minLon, minLat, maxLon, maxLat));
+            }
         }else {
-            server = std::unique_ptr<Server>(new ZMQ_Server(filepath));
+            if (zmq) {
+                server = std::unique_ptr<Server>(new ZMQ_Server(filepath,12, ZMQ_Server::Transport::TCP));
+            } else {
+                server = std::unique_ptr<Server>(new Stdout_Server(filepath));
+            }
         }
-        std::cout << std::endl << "Tiles:" << server->get_tiles_num() << std::endl;
+        std::cerr << std::endl << "Tiles:" << server->get_tiles_num() << std::endl;
         server->run();
 
-    } else {
-
-        std::unique_ptr<Worker> worker = std::unique_ptr<Worker>(new ZMQ_Worker(filepath));
+    } else if (is_worker) {
+        if (zmq) {
+            worker = std::unique_ptr<Worker>(new ZMQ_Worker(filepath, ZMQ_Worker::Transport::TCP));
+        } else {
+            worker = std::unique_ptr<Worker>(new Stdout_Worker(filepath));
+        }
         worker->run();
+        worker->info();
+    } else {
+        int sum=0;
+        std::string line;
+        int current;
+        while(std::getline(std::cin, line)) {
+            std::istringstream line_stream(line);
+            //std::cerr << "LINE:" << line << std::endl;
+            if (line_stream.get() == ']') {
+                line_stream >> current;
+                sum+=current;
+            }
+        }
+        std::cerr << "Sum: " << sum << std::endl;
     }
-
-    std::cout << std::endl;
+    std::cerr << std::endl;
     return 0;
 }
 

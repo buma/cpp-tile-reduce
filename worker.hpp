@@ -12,6 +12,9 @@ public:
     virtual void info() = 0;
 protected:
     MBTileReader tileReader;
+    void map(std::unique_ptr<TileData> tileData);
+    static bool filterStreet(const TileFeature * feature);
+    virtual void send(int dataToSend) = 0;
 };
 
 #endif // WORKER_HPP

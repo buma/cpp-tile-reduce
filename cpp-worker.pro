@@ -17,7 +17,9 @@ SOURCES += main.cpp \
     server.cpp \
     zmq_server.cpp \
     worker.cpp \
-    zmq_worker.cpp
+    zmq_worker.cpp \
+    stdout_server.cpp \
+    stdout_worker.cpp
 
 INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include /home/mabu/programiranje/cpp/CpperoMQ/include /home/mabu/programiranje/cpp/docopt.cpp
 
@@ -35,5 +37,7 @@ HEADERS += \
     server.hpp \
     worker.hpp \
     zmq_worker.hpp \
-    utils.hpp
+    utils.hpp \
+    stdout_server.hpp \
+    stdout_worker.hpp
 

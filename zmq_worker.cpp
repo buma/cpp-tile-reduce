@@ -60,38 +60,10 @@ void ZMQ_Worker::run() {
 
 }
 
-bool ZMQ_Worker::filterStreet(const TileFeature *feature) {
-        //TODO: create this outside a function
-        std::set<std::string> streetValues = {"paved",
-                "concrete",
-                "asphalt",
-                "concrete:plates",
-                "cobblestone",
-                "cobblestone:flattened",
-                "sett"};
-    return feature->hasTagValue("highway", "footway") &&
-            !feature->hasTagValue("footway", "sidewalk") &&
-            !feature->hasTagValue("footway", "crossing") &&
-            !feature->hasTagValue("area", "yes") &&
-            !feature->hasTag("area:highway") &&
-            !feature->hasTagValue("tunnel", "yes") &&
-            (!feature->hasTag("surface") || feature->hasTagValue("surface", streetValues));
-}
-
 void ZMQ_Worker::info() {
     std::cout << "Rec: " << this->received_tiles << std::endl;
     std::cout << "Worked: " << this->sent_tiles << std::endl;
 
-}
-
-void ZMQ_Worker::map(std::unique_ptr<TileData> tileData) {
-
-    auto footways = tileData->getLayer("osm")->filter(filterStreet);
-    msgpack::sbuffer sbuf;
-    msgpack::pack(sbuf, footways.size());
-    //std::cout << "Footways: " << footways.size() << std::endl;
-    push_socket.send(CpperoMQ::OutgoingMessage(sbuf.size(), sbuf.data()));
-    this->sent_tiles++;
 }
 
 void ZMQ_Worker::connect() {
@@ -118,4 +90,11 @@ const std::string ZMQ_Worker::get_addr(int port,std::string host) const {
     //const std::string& tmp = ss.str();
     std::cerr << "Adress: " << tmp << std::endl;
     return tmp;
+}
+
+void ZMQ_Worker::send(int dataToSend) {
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, dataToSend);
+    push_socket.send(CpperoMQ::OutgoingMessage(sbuf.size(), sbuf.data()));
+    this->sent_tiles++;
 }

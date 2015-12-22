@@ -27,10 +27,9 @@ private:
     bool isDone;
     void connect();
     const std::string get_addr(int port,std::string host="127.0.0.1") const;
-    void map(std::unique_ptr<TileData> tileData);
-    static bool filterStreet(const TileFeature * feature);
     //void map(TileData* tileData);
     void info() override;
+    void send(int) override;
 };
 
 #endif // ZMQ_WORKER_HPP
