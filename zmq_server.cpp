@@ -51,6 +51,8 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
 
     //CpperoMQ::PollItem poll_ctrl_error(ZMQ_POLLERR, ctrl_socket, [&]{socket_error();});
 
+    msgpack::sbuffer sbuf;
+
 
     auto poll_push = CpperoMQ::isSendReady(push_socket, [&](){
         try {
@@ -58,15 +60,15 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
 
             std::cout << "S: " << this->sent_tiles << " tile ";
             std::cout << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile) << std::endl;
-            std::stringstream buffer;
+            //std::stringstream buffer;
 
             //buffer << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile);
 
-            msgpack::pack(buffer, tile);
+            msgpack::pack(sbuf, tile);
 
-            const std::string& tmp = buffer.str();
             //std::cout << "B:" << tmp << std::endl;
-            push_socket.send(CpperoMQ::OutgoingMessage(tmp.size(), tmp.data()));
+            push_socket.send(CpperoMQ::OutgoingMessage(sbuf.size(), sbuf.data()));
+            sbuf.clear();
             //++tile_location;
             this->sent_tiles++;
             //std::cerr << "ST:" << this->sent_tiles << std::endl;

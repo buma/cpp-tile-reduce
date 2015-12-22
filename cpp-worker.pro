@@ -3,6 +3,8 @@ CONFIG += c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
+QMAKE_CXXFLAGS_RELEASE = -march=native -O2 -fstack-protector-strong
+
 SOURCES += main.cpp \
     msgpack_test.cpp \
     generated/vector_tile.pb.cc \
