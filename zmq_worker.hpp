@@ -12,6 +12,7 @@ class ZMQ_Worker : public Worker
 {
 public:
     ZMQ_Worker(std::string filepath, Transport _transport=Transport::TCP);
+    ZMQ_Worker(std::string filepath, CpperoMQ::Context &context1);
     void run() override;
 
 private:

@@ -13,6 +13,17 @@ ZMQ_Worker::ZMQ_Worker(std::string filepath, Transport transport) : Worker(filep
 
 }
 
+ZMQ_Worker::ZMQ_Worker(std::string filepath, CpperoMQ::Context &context1) : Worker(filepath),
+    _transport(Transport::INPROC),
+    pull_socket(context1.createPullSocket()),
+    push_socket(context1.createPushSocket()),
+    ctrl_socket(context1.createRouterSocket()),
+    subscriber_socket(context1.createSubscribeSocket()),
+    sent_tiles(0), received_tiles(0), isDone(false)
+{
+
+}
+
 void ZMQ_Worker::run() {
     std::cout << "Waiting:" << std::endl;
     this->connect();
