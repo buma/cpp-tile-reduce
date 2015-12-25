@@ -15,6 +15,7 @@ class TileFeature : public std::enable_shared_from_this<TileFeature>
 {
 public:
     TileFeature();
+    TileFeature(int tag_number);
     void addTag(std::string & key, const mapnik::vector::tile_value & value);
     friend std::ostream& operator<<(std::ostream&, const TileFeature&);
     void addGeometry(std::unique_ptr<geos::geom::Geometry> geometry);

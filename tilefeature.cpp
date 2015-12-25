@@ -5,7 +5,19 @@
 
 TileFeature::TileFeature()
 {
+    //Long tags are:
+    //-changeset
+    //-node-id
+    //-timestamp
+    //-uid
+    //version
+    this->long_tags.reserve(5);
+}
 
+TileFeature::TileFeature(int tag_number)
+{
+    this->long_tags.reserve(5);
+    this->string_tags.reserve(tag_number);
 }
 
 void TileFeature::addTag(std::string & key, const mapnik::vector::tile_value & value) {

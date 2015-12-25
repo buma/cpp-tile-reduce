@@ -33,7 +33,7 @@ std::shared_ptr<TileFeature> TileLayer::getFeature(uint n, int z, unsigned x, un
     //Not yet inserted
     if(n >= this->features.size()){
         auto feature = this->protobuf_layer->features(n);
-        auto tileFeature = std::make_shared<TileFeature>();
+        auto tileFeature = std::make_shared<TileFeature>(feature.tags_size());
         assert(feature.tags_size() % 2 == 0);
         //std::cerr << "FEATURE: " << feature.id() << " Type: " << feature.type() << std::endl;
 
