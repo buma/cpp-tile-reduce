@@ -3,6 +3,8 @@
 #include <sstream>
 #include <msgpack.hpp>
 
+#include <zmq_worker.hpp>
+
 ZMQ_Server::ZMQ_Server(float minLon, float minLat, float maxLon, float maxLat, int zoom, Transport transport)
     : Server(minLon, minLat, maxLon, maxLat, zoom),
       _transport(transport),
@@ -31,20 +33,40 @@ ZMQ_Server::ZMQ_Server(std::string filepath, int zoom, Transport transport)
 
 }
 
-void ZMQ_Server::run(bool start_workers, unsigned int workers) {
-    if (workers == 0) {
-        unsigned int n = std::thread::hardware_concurrency();
-        std::cout << n << "threads" << std::endl;
+void ZMQ_Server::run(bool start_workers, unsigned int num_workers) {
+    unsigned int n = std::thread::hardware_concurrency();
+    std::cout << n << "threads" << std::endl;
+    if (num_workers == 0 || num_workers > n) {
         if (n != 0) {
-            workers = n;
+            num_workers = n;
         }
     }
+
     this->connect();
 
-    //Without this tasks get sent only to the first worker
-    std::cout << "Press Enter when the workers are ready: " << std::endl;
-    getchar();
-    std::cout << "Sending tasks to workers...\n" << std::endl;
+    std::vector<std::thread> tt;
+    std::vector<std::shared_ptr<ZMQ_Worker>> workers;
+    tt.reserve(num_workers);
+    workers.reserve(num_workers);
+
+    if (start_workers) {
+        std::cout << "Starting " << num_workers << " workers." << std::endl;
+        std::shared_ptr<ZMQ_Worker> worker= std::make_shared<ZMQ_Worker>(this->tileReader.get_filename(), _transport);
+
+        for(int i=0; i < num_workers; i++) {
+            workers.push_back(std::make_shared<ZMQ_Worker>(this->tileReader.get_filename(), this->context));
+            tt.push_back(std::thread(&ZMQ_Worker::run, workers[i].get()));
+        }
+
+    } else {
+        //Without this tasks get sent only to the first worker
+        std::cout << "Press Enter when the workers are ready: " << std::endl;
+        getchar();
+        std::cout << "Sending tasks to workers...\n" << std::endl;
+
+    }
+
+    long sum = 0;
 
 
 
@@ -118,6 +140,11 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
         }
     }
     this->publish_socket.send(CpperoMQ::OutgoingMessage(DONE.c_str()));
+    if (start_workers) {
+        for (int i=0; i<num_workers;i++) {
+            tt[i].join();
+        }
+    }
     std::cout << "Sent: " << this->sent_tiles << std::endl;
     std::cout << "Rec: " << this->received_tiles << std::endl;
 

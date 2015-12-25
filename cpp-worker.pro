@@ -24,7 +24,7 @@ SOURCES += main.cpp \
 
 INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include /home/mabu/programiranje/cpp/CpperoMQ/include /home/mabu/programiranje/cpp/docopt.cpp
 
-LIBS += -lzmq -lprotobuf -lm -lz -lgeos -lsqlite3 -L/home/mabu/programiranje/cpp/docopt.cpp/build -ldocopt
+LIBS += -lzmq -lprotobuf -lm -lz -lgeos -lsqlite3 -pthread -L/home/mabu/programiranje/cpp/docopt.cpp/build -ldocopt
 
 HEADERS += \
     tiledata.hpp \

@@ -1,4 +1,5 @@
 #include <sstream>
+#include <thread>
 #include <msgpack.hpp>
 #include "zmq_worker.hpp"
 
@@ -25,7 +26,7 @@ ZMQ_Worker::ZMQ_Worker(std::string filepath, CpperoMQ::Context &context1) : Work
 }
 
 void ZMQ_Worker::run() {
-    std::cout << "Waiting:" << std::endl;
+    std::cout << "Waiting. Worker:" << std::this_thread::get_id() << std::endl;
     this->connect();
     auto poll_pull = CpperoMQ::isReceiveReady(pull_socket, [&](){
         bool more = true;
@@ -87,6 +88,7 @@ void ZMQ_Worker::run() {
 }
 
 void ZMQ_Worker::info() {
+    std::cout << "THread:" << std::this_thread::get_id() << std::endl;
     std::cout << "Rec: " << this->received_tiles << std::endl;
     std::cout << "Worked: " << this->sent_tiles << std::endl;
 

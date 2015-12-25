@@ -14,7 +14,7 @@ public:
                Transport _transport=Transport::TCP);
     ZMQ_Server(std::string filepath, int zoom=12,
                Transport _transport=Transport::TCP);
-    void run(bool start_workers=false, unsigned int workers=0) override;
+    void run(bool start_workers=false, unsigned int num_workers=0) override;
 
 
 private:
