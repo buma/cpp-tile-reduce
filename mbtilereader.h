@@ -28,6 +28,7 @@ public:
             exit(EXIT_FAILURE);
         }
     }
+    std::string get_filename() const;
 
 private:
     sqlite3 *db;

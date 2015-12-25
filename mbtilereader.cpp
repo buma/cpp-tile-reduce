@@ -103,6 +103,10 @@ TileList MBTileReader::get_all_tiles(int zoom) const {
     return tiles;
 }
 
+std::string MBTileReader::get_filename() const {
+    return this->filename;
+}
+
 const std::string MBTileReader::sql = "SELECT tile_data from tiles where zoom_level = ? and tile_column = ? and tile_row = ?;";
 const std::string MBTileReader::sql_all = "SELECT zoom_level, tile_column, tile_row from tiles order by zoom_level, tile_column, tile_row;";
 
