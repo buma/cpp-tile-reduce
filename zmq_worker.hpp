@@ -11,10 +11,6 @@
 class ZMQ_Worker : public Worker
 {
 public:
-    enum class Transport {
-        TCP,
-        IPC
-    };
     ZMQ_Worker(std::string filepath, Transport _transport=Transport::TCP);
     void run() override;
 
@@ -28,7 +24,6 @@ private:
     CpperoMQ::SubscribeSocket subscriber_socket;
     bool isDone;
     void connect();
-    const std::string get_addr(int port,std::string host="127.0.0.1") const;
     //void map(TileData* tileData);
     void info() override;
     void send(int) override;

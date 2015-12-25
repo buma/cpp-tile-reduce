@@ -19,7 +19,8 @@ SOURCES += main.cpp \
     worker.cpp \
     zmq_worker.cpp \
     stdout_server.cpp \
-    stdout_worker.cpp
+    stdout_worker.cpp \
+    utils.cpp
 
 INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include /home/mabu/programiranje/cpp/CpperoMQ/include /home/mabu/programiranje/cpp/docopt.cpp
 

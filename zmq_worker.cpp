@@ -82,31 +82,12 @@ void ZMQ_Worker::info() {
 }
 
 void ZMQ_Worker::connect() {
-    this->pull_socket.connect(this->get_addr(5555).c_str());
-    this->push_socket.connect(this->get_addr(6666).c_str());
-    this->ctrl_socket.connect(this->get_addr(7777).c_str());
-    this->subscriber_socket.connect(this->get_addr(4444).c_str());
+    this->pull_socket.connect(get_addr(5555, _transport).c_str());
+    this->push_socket.connect(get_addr(6666, _transport).c_str());
+    this->ctrl_socket.connect(get_addr(7777, _transport).c_str());
+    this->subscriber_socket.connect(get_addr(4444, _transport).c_str());
     this->subscriber_socket.subscribe();
 
-}
-
-const std::string ZMQ_Worker::get_addr(int port,std::string host) const {
-    std::string tmp;
-    switch (this->_transport) {
-    case Transport::IPC:
-        //ss << "ipc://" << host << ".zmq";
-        host = "socket";
-        tmp = "ipc://" + host + "_" + std::to_string(port) + ".zmq";
-        break;
-    case Transport::TCP:
-    default:
-        //ss << "tcp://" << host << ":" << port;
-        tmp = "tcp://" + host + ":" + std::to_string(port);
-        break;
-    }
-    //const std::string& tmp = ss.str();
-    std::cerr << "Adress: " << tmp << std::endl;
-    return tmp;
 }
 
 void ZMQ_Worker::send(int dataToSend) {

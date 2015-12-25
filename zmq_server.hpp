@@ -10,10 +10,6 @@
 class ZMQ_Server : public Server
 {
 public:
-    enum class Transport {
-        TCP,
-        IPC
-    };
     ZMQ_Server(float minLon=-1, float minLat=-1, float maxLon=-1, float maxLat=-1, int zoom=12,
                Transport _transport=Transport::TCP);
     ZMQ_Server(std::string filepath, int zoom=12,
@@ -34,8 +30,7 @@ private:
     CpperoMQ::PublishSocket publish_socket;
     uint sent_tiles,received_tiles,current_tile;
 
-    void connect();
-    const std::string get_addr(int port,std::string host="127.0.0.1") const;
+    void connect();  
     void collect_task();
     void start_new_task();
     void manage();

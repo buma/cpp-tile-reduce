@@ -91,13 +91,13 @@ int main(int argc, const char** argv) {
             std::cerr << "maxLon: " << maxLon << endl;
             std::cerr << "maxLat: " << maxLat << endl;
             if (zmq) {
-                server = std::unique_ptr<Server>(new ZMQ_Server(minLon, minLat, maxLon, maxLat, 12, ZMQ_Server::Transport::TCP));
+                server = std::unique_ptr<Server>(new ZMQ_Server(minLon, minLat, maxLon, maxLat, 12, Transport::TCP));
             } else {
                 server = std::unique_ptr<Server>(new Stdout_Server(minLon, minLat, maxLon, maxLat));
             }
         }else {
             if (zmq) {
-                server = std::unique_ptr<Server>(new ZMQ_Server(filepath,12, ZMQ_Server::Transport::TCP));
+                server = std::unique_ptr<Server>(new ZMQ_Server(filepath,12, Transport::TCP));
             } else {
                 server = std::unique_ptr<Server>(new Stdout_Server(filepath));
             }
@@ -107,12 +107,11 @@ int main(int argc, const char** argv) {
 
     } else if (is_worker) {
         if (zmq) {
-            worker = std::unique_ptr<Worker>(new ZMQ_Worker(filepath, ZMQ_Worker::Transport::TCP));
+            worker = std::unique_ptr<Worker>(new ZMQ_Worker(filepath, Transport::TCP));
         } else {
             worker = std::unique_ptr<Worker>(new Stdout_Worker(filepath));
         }
         worker->run();
-        worker->info();
     } else {
         int sum=0;
         std::string line;

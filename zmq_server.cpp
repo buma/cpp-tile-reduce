@@ -3,7 +3,7 @@
 #include <sstream>
 #include <msgpack.hpp>
 
-ZMQ_Server::ZMQ_Server(float minLon, float minLat, float maxLon, float maxLat, int zoom, ZMQ_Server::Transport transport)
+ZMQ_Server::ZMQ_Server(float minLon, float minLat, float maxLon, float maxLat, int zoom, Transport transport)
     : Server(minLon, minLat, maxLon, maxLat, zoom),
       _transport(transport),
       pull_socket(this->context.createPullSocket()),
@@ -17,7 +17,7 @@ ZMQ_Server::ZMQ_Server(float minLon, float minLat, float maxLon, float maxLat, i
 
 }
 
-ZMQ_Server::ZMQ_Server(std::string filepath, int zoom, ZMQ_Server::Transport transport)
+ZMQ_Server::ZMQ_Server(std::string filepath, int zoom, Transport transport)
     : Server(filepath, zoom),
       _transport(transport),
       pull_socket(this->context.createPullSocket()),
@@ -123,33 +123,16 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
 
 }
 
-const std::string ZMQ_Server::get_addr(int port,std::string host) const {
-    std::string tmp;
-    switch (this->_transport) {
-    case Transport::IPC:
-        //ss << "ipc://" << host << ".zmq";
-        host = "socket";
-        tmp = "ipc://" + host + "_" + std::to_string(port) + ".zmq";
-        break;
-    case Transport::TCP:
-    default:
-        //ss << "tcp://" << host << ":" << port;
-        tmp = "tcp://" + host + ":" + std::to_string(port);
-        break;
-    }
-    //const std::string& tmp = ss.str();
-    std::cerr << "Adress: " << tmp << std::endl;
-    return tmp;
-}
+
 
 void ZMQ_Server::connect() {
     this->push_socket.setSendHighWaterMark(2);
-    this->pull_socket.bind(this->get_addr(6666).c_str());
+    this->pull_socket.bind(get_addr(6666, _transport).c_str());
 
-    this->push_socket.bind(this->get_addr(5555).c_str());
-    this->ctrl_socket.bind(this->get_addr(7777).c_str());
+    this->push_socket.bind(get_addr(5555, _transport).c_str());
+    this->ctrl_socket.bind(get_addr(7777, _transport).c_str());
 
-    this->publish_socket.bind(this->get_addr(4444).c_str());
+    this->publish_socket.bind(get_addr(4444, _transport).c_str());
 
 }
 
