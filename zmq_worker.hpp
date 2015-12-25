@@ -6,6 +6,7 @@
 #include <CpperoMQ/OutgoingMessage.hpp>
 #include <CpperoMQ/IncomingMessage.hpp>
 #include "worker.hpp"
+#include "utils.hpp"
 
 class ZMQ_Worker : public Worker
 {
@@ -24,6 +25,7 @@ private:
     CpperoMQ::PullSocket pull_socket;
     CpperoMQ::PushSocket push_socket;
     CpperoMQ::RouterSocket ctrl_socket;
+    CpperoMQ::SubscribeSocket subscriber_socket;
     bool isDone;
     void connect();
     const std::string get_addr(int port,std::string host="127.0.0.1") const;

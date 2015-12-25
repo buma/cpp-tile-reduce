@@ -31,6 +31,7 @@ private:
     CpperoMQ::PullSocket pull_socket;
     CpperoMQ::PushSocket push_socket;
     CpperoMQ::RouterSocket ctrl_socket;
+    CpperoMQ::PublishSocket publish_socket;
     uint sent_tiles,received_tiles,current_tile;
 
     void connect();

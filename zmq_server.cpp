@@ -9,6 +9,7 @@ ZMQ_Server::ZMQ_Server(float minLon, float minLat, float maxLon, float maxLat, i
       pull_socket(this->context.createPullSocket()),
       push_socket(this->context.createPushSocket()),
       ctrl_socket(this->context.createRouterSocket()),
+      publish_socket(this->context.createPublishSocket()),
       sent_tiles(0), received_tiles(0), current_tile(0)
 {
 
@@ -22,6 +23,7 @@ ZMQ_Server::ZMQ_Server(std::string filepath, int zoom, ZMQ_Server::Transport tra
       pull_socket(this->context.createPullSocket()),
       push_socket(this->context.createPushSocket()),
       ctrl_socket(this->context.createRouterSocket()),
+      publish_socket(this->context.createPublishSocket()),
       sent_tiles(0), received_tiles(0), current_tile(0)
 {
 
@@ -115,6 +117,7 @@ void ZMQ_Server::run(bool start_workers, unsigned int workers) {
             poller.poll(poll_pull);
         }
     }
+    this->publish_socket.send(CpperoMQ::OutgoingMessage(DONE.c_str()));
     std::cout << "Sent: " << this->sent_tiles << std::endl;
     std::cout << "Rec: " << this->received_tiles << std::endl;
 
@@ -145,6 +148,8 @@ void ZMQ_Server::connect() {
 
     this->push_socket.bind(this->get_addr(5555).c_str());
     this->ctrl_socket.bind(this->get_addr(7777).c_str());
+
+    this->publish_socket.bind(this->get_addr(4444).c_str());
 
 }
 

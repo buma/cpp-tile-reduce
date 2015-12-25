@@ -7,6 +7,7 @@ ZMQ_Worker::ZMQ_Worker(std::string filepath, Transport transport) : Worker(filep
     pull_socket(this->context.createPullSocket()),
     push_socket(this->context.createPushSocket()),
     ctrl_socket(this->context.createRouterSocket()),
+    subscriber_socket(this->context.createSubscribeSocket()),
     sent_tiles(0), received_tiles(0), isDone(false)
 {
 
@@ -51,9 +52,23 @@ void ZMQ_Worker::run() {
         }
     });
 
+    auto poll_sub = CpperoMQ::isReceiveReady(subscriber_socket, [&](){
+       bool more = true;
+       while(more) {
+        CpperoMQ::IncomingMessage inMsg;
+        inMsg.receive(subscriber_socket, more);
+        std::string message(inMsg.charData(), inMsg.size());
+        if (message.compare(DONE)==0) {
+            isDone = true;
+        } else {
+            std::cerr << "Strange command: " << message << std::endl;
+        }
+       }
+    });
+
     CpperoMQ::Poller poller(-1); //-1 waits indefinitely until there is something to sent/receive which means less CPU usage
     while(!isDone) {
-        poller.poll(poll_pull);
+        poller.poll(poll_pull, poll_sub);
         //std::cout << "." << std::endl;
     }
     this->info();
@@ -70,6 +85,8 @@ void ZMQ_Worker::connect() {
     this->pull_socket.connect(this->get_addr(5555).c_str());
     this->push_socket.connect(this->get_addr(6666).c_str());
     this->ctrl_socket.connect(this->get_addr(7777).c_str());
+    this->subscriber_socket.connect(this->get_addr(4444).c_str());
+    this->subscriber_socket.subscribe();
 
 }
 
