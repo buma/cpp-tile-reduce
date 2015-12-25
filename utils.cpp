@@ -10,6 +10,10 @@ std::string get_addr(int port, Transport transport, std::string host)  {
         host = "socket";
         tmp = "ipc://" + host + "_" + std::to_string(port) + ".zmq";
         break;
+    case Transport::INPROC:
+        host = "socket";
+        tmp = "inproc://" + host + "_" + std::to_string(port);
+        break;
     case Transport::TCP:
     default:
         //ss << "tcp://" << host << ":" << port;

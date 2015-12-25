@@ -4,7 +4,8 @@
 
 enum class Transport {
     TCP,
-    IPC
+    IPC,
+    INPROC
 };
 std::string get_addr(int port,Transport transport=Transport::TCP, std::string host="127.0.0.1");
 
