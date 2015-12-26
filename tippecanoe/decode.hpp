@@ -8,7 +8,7 @@
 #include <geos/geom/GeometryFactory.h>
 
 
-void handle(std::string message, int z, unsigned x, unsigned y, mapnik::vector::tile & tile);
+void handle(const char * data, std::size_t size, int z, unsigned x, unsigned y, mapnik::vector::tile & tile);
 std::unique_ptr<geos::geom::Geometry> handle(mapnik::vector::tile_feature &tile, int extent,
                                              int z, unsigned x, unsigned y, std::unique_ptr<geos::geom::GeometryFactory> && geometry_factory);
 

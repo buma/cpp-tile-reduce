@@ -32,8 +32,13 @@ inline bool is_compressed(std::string const &data) {
     return data.size() > 2 && (((uint8_t) data[0] == 0x78 && (uint8_t) data[1] == 0x9C) || ((uint8_t) data[0] == 0x1F && (uint8_t) data[1] == 0x8B));
 }
 
+inline bool is_compressed(const char * data, std::size_t size) {
+    return size > 2 && ((static_cast<uint8_t>(data[0])== 0x78 && static_cast<uint8_t>(data[1]) == 0x9C)
+            || (static_cast<uint8_t>(data[0]) == 0x1F && static_cast<uint8_t>(data[1]) == 0x8B));
+}
+
 // https://github.com/mapbox/mapnik-vector-tile/blob/master/src/vector_tile_compression.hpp
-inline int decompress(std::string const &input, std::string &output) {
+inline int decompress(const char * data, std::size_t size, std::string &output) {
     z_stream inflate_s;
     inflate_s.zalloc = Z_NULL;
     inflate_s.zfree = Z_NULL;
@@ -43,12 +48,12 @@ inline int decompress(std::string const &input, std::string &output) {
     if (inflateInit2(&inflate_s, 32 + 15) != Z_OK) {
         fprintf(stderr, "error: %s\n", inflate_s.msg);
     }
-    inflate_s.next_in = (Bytef *) input.data();
-    inflate_s.avail_in = input.size();
+    inflate_s.next_in = (Bytef *) data;
+    inflate_s.avail_in = size;
     size_t length = 0;
     do {
-        output.resize(length + 2 * input.size());
-        inflate_s.avail_out = 2 * input.size();
+        output.resize(length + 2 * size);
+        inflate_s.avail_out = 2 * size;
         inflate_s.next_out = (Bytef *) (output.data() + length);
         int ret = inflate(&inflate_s, Z_FINISH);
         if (ret != Z_STREAM_END && ret != Z_OK && ret != Z_BUF_ERROR) {
@@ -56,11 +61,15 @@ inline int decompress(std::string const &input, std::string &output) {
             return 0;
         }
 
-        length += (2 * input.size() - inflate_s.avail_out);
+        length += (2 * size - inflate_s.avail_out);
     } while (inflate_s.avail_out == 0);
     inflateEnd(&inflate_s);
     output.resize(length);
     return 1;
+}
+
+inline int decompress(std::string const &input, std::string &output) {
+    decompress(input.data(), input.size(), output);
 }
 
 #define VT_POINT 1
@@ -105,20 +114,20 @@ struct draw {
 		this->lat = lat;
 	}
 };
-void handle(std::string message, int z, unsigned x, unsigned y, mapnik::vector::tile &tile) {
+void handle(const char * data, std::size_t size, int z, unsigned x, unsigned y, mapnik::vector::tile &tile) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 
 	// https://github.com/mapbox/mapnik-vector-tile/blob/master/examples/c%2B%2B/tileinfo.cpp
     //mapnik::vector::tile tile;
 
-	if (is_compressed(message)) {
+    if (is_compressed(data, size)) {
 		std::string uncompressed;
-		decompress(message, uncompressed);
+        decompress(data, size, uncompressed);
 		if (!tile.ParseFromString(uncompressed)) {
 			fprintf(stderr, "Couldn't decompress tile %d/%u/%u\n", z, x, y);
 			exit(EXIT_FAILURE);
 		}
-	} else if (!tile.ParseFromString(message)) {
+    } else if (!tile.ParseFromArray(data, size)) {
 		fprintf(stderr, "Couldn't parse tile %d/%u/%u\n", z, x, y);
 		exit(EXIT_FAILURE);
 	}

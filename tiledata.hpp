@@ -21,6 +21,11 @@ public:
              , std::chrono::nanoseconds & protobuf_decode
          #endif
              );
+    TileData(const char * data, std::size_t size, int z, unsigned x, unsigned y
+         #ifdef TIMING
+             , std::chrono::nanoseconds & protobuf_decode
+         #endif
+             );
     friend std::ostream& operator<<(std::ostream&, const TileData&);
     std::shared_ptr<TileLayer> getLayer(std::string);
     std::string toString() const {

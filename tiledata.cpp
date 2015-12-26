@@ -62,6 +62,22 @@ TileData::TileData(std::string & message, int z, unsigned x, unsigned y
     this->init(tile, z, x, y);
 }
 
+TileData::TileData(const char * data, std::size_t size, int z, unsigned x, unsigned y
+                   #ifdef TIMING
+                       , std::chrono::nanoseconds & protobuf_decode
+                   #endif
+                   ) {
+    mapnik::vector::tile tile;
+#ifdef TIMING
+    auto start = std::chrono::high_resolution_clock::now();
+#endif
+    handle(data, size, z, x, y, tile);
+#ifdef TIMING
+    protobuf_decode+=(std::chrono::high_resolution_clock::now()-start);
+#endif
+    this->init(tile, z, x, y);
+}
+
 std::ostream& operator<<(std::ostream& os, const TileData& tileData) {
     os << "{ ";
     for (auto&& layer: tileData.layers) {
