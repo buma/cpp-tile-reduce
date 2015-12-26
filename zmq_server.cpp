@@ -4,6 +4,9 @@
 #include <msgpack.hpp>
 
 #include <zmq_worker.hpp>
+#ifdef TIMING
+#include <chrono>
+#endif
 
 ZMQ_Server::ZMQ_Server(float minLon, float minLat, float maxLon, float maxLat, int zoom, Transport transport)
     : Server(minLon, minLat, maxLon, maxLat, zoom),
@@ -65,6 +68,10 @@ void ZMQ_Server::run(bool start_workers, unsigned int num_workers) {
         std::cout << "Sending tasks to workers...\n" << std::endl;
 
     }
+#ifdef TIMING
+    std::chrono::nanoseconds msgpack_encoding(0);
+    std::chrono::nanoseconds msgpack_decoding(0);
+#endif
 
     long sum = 0;
 
@@ -87,8 +94,13 @@ void ZMQ_Server::run(bool start_workers, unsigned int num_workers) {
             //std::stringstream buffer;
 
             //buffer << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile);
-
+#ifdef TIMING
+            auto start = std::chrono::high_resolution_clock::now();
+#endif
             msgpack::pack(sbuf, tile);
+#ifdef TIMING
+            msgpack_encoding+=(std::chrono::high_resolution_clock::now()-start);
+#endif
 
             //std::cout << "B:" << tmp << std::endl;
             push_socket.send(CpperoMQ::OutgoingMessage(sbuf.size(), sbuf.data()));
@@ -110,12 +122,18 @@ void ZMQ_Server::run(bool start_workers, unsigned int num_workers) {
             inMsg.receive(pull_socket, more);
             //Client sends empty message if it failed to decode anything
             if (inMsg.size() > 0) {
+#ifdef TIMING
+                auto start = std::chrono::high_resolution_clock::now();
+#endif
                 msgpack::unpacked result;
                 msgpack::unpack(result, inMsg.charData(), inMsg.size());
                 msgpack::object deserialized = result.get();
 
                 int number;
                 deserialized.convert(&number);
+#ifdef TIMING
+                msgpack_decoding+=(std::chrono::high_resolution_clock::now()-start);
+#endif
 
                 sum+=number;
 
@@ -129,6 +147,10 @@ void ZMQ_Server::run(bool start_workers, unsigned int num_workers) {
     });
 
 
+#ifdef TIMING
+                std::chrono::nanoseconds serverDuration;
+                auto startServer = std::chrono::high_resolution_clock::now();
+#endif
     CpperoMQ::Poller poller(-1); //-1 waits indefinitely until there is something to sent/receive which means less CPU usage
     //until we didn't receive all the responses
     while(received_tiles < this->tileList->size()) {
@@ -139,12 +161,30 @@ void ZMQ_Server::run(bool start_workers, unsigned int num_workers) {
             poller.poll(poll_pull);
         }
     }
+#ifdef TIMING
+    serverDuration = (std::chrono::high_resolution_clock::now()-startServer);
+#endif
+
     this->publish_socket.send(CpperoMQ::OutgoingMessage(DONE.c_str()));
     if (start_workers) {
         for (int i=0; i<num_workers;i++) {
             tt[i].join();
         }
     }
+#ifdef TIMING
+    std::cout << "RUNTIME of " << "Server" << ": " << \
+        std::chrono::duration_cast<std::chrono::milliseconds>( \
+               serverDuration \
+        ).count() << " ms " << std::endl;
+    std::cout << "RUNTIME of " << "msgpack_encoding" << ": " << \
+        std::chrono::duration_cast<std::chrono::milliseconds>( \
+               msgpack_encoding \
+        ).count() << " ms " << std::endl;
+    std::cout << "RUNTIME of " << "msgpack_decoding" << ": " << \
+        std::chrono::duration_cast<std::chrono::milliseconds>( \
+               msgpack_decoding \
+        ).count() << " ms " << std::endl;
+#endif
     std::cout << "Sent: " << this->sent_tiles << std::endl;
     std::cout << "Rec: " << this->received_tiles << std::endl;
 

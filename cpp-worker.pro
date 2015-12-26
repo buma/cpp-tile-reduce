@@ -5,6 +5,8 @@ CONFIG -= qt
 
 QMAKE_CXXFLAGS_RELEASE = -march=native -O2 -fstack-protector-strong
 
+DEFINES += TIMING
+
 SOURCES += main.cpp \
     msgpack_test.cpp \
     generated/vector_tile.pb.cc \

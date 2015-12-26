@@ -43,8 +43,12 @@ std::unique_ptr<TileData> MBTileReader::get_tile(int z, unsigned x, unsigned y)
         }*/
 
         //std::cerr << "LEN" << len << std::endl;
-        auto data = std::string(s, len);
-        tileData = std::unique_ptr<TileData>(new TileData(data, z, x, y));
+        //auto data = std::string(s, len);
+#ifdef TIMING
+        tileData = std::unique_ptr<TileData>(new TileData(s, len, z, x, y, protobuf_decode));
+#else
+        tileData = std::unique_ptr<TileData>(new TileData(s, len, z, x, y));
+#endif
     }
 
     sqlite3_finalize(stmt);

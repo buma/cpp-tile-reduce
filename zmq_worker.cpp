@@ -27,12 +27,23 @@ ZMQ_Worker::ZMQ_Worker(std::string filepath, CpperoMQ::Context &context1) : Work
 
 void ZMQ_Worker::run() {
     std::cout << "Waiting. Worker:" << std::this_thread::get_id() << std::endl;
+
     this->connect();
+
+#ifdef TIMING
+    std::chrono::nanoseconds msgpack_decoding(0);
+    std::chrono::nanoseconds tile_decoding(0);
+    std::chrono::nanoseconds tile_mapping(0);
+#endif
+    std::unique_ptr<TileData> tileData;
     auto poll_pull = CpperoMQ::isReceiveReady(pull_socket, [&](){
         bool more = true;
         while(more) {
             CpperoMQ::IncomingMessage inMsg;
             inMsg.receive(pull_socket, more);
+#ifdef TIMING
+            auto start = std::chrono::high_resolution_clock::now();
+#endif
             msgpack::unpacked result;
             msgpack::unpack(result, inMsg.charData(), inMsg.size());
             // deserialized object is valid during the msgpack::unpacked instance alive.
@@ -44,11 +55,24 @@ void ZMQ_Worker::run() {
 
             try{
                 deserialized.convert(&dst);
-                std::cout << "R: " << this->received_tiles << " " << deserialized << std::endl;
+#ifdef TIMING
+                msgpack_decoding+=(std::chrono::high_resolution_clock::now()-start);
+                start = std::chrono::high_resolution_clock::now();
+#endif
+                //std::cout << "R: " << this->received_tiles << " " << deserialized << std::endl;
                 //z x y
-                auto tileData = this->tileReader.get_tile(std::get<2>(dst), std::get<0>(dst), std::get<1>(dst));
+                tileData = this->tileReader.get_tile(std::get<2>(dst), std::get<0>(dst), std::get<1>(dst));
+#ifdef TIMING
+                tile_decoding+=(std::chrono::high_resolution_clock::now()-start);
+#endif
                 if (tileData) {
+#ifdef TIMING
+                    start = std::chrono::high_resolution_clock::now();
+#endif
                     map(std::move(tileData));
+#ifdef TIMING
+                    tile_mapping+=(std::chrono::high_resolution_clock::now()-start);
+#endif
                 } else {
                     //std::cerr << "Problems reading tile!" << std::endl;
                     send(0);
@@ -83,6 +107,26 @@ void ZMQ_Worker::run() {
         poller.poll(poll_pull, poll_sub);
         //std::cout << "." << std::endl;
     }
+
+#ifdef TIMING
+    std::cout << "RUNTIME of " << "msgpack_decoding" << ": " << \
+        std::chrono::duration_cast<std::chrono::milliseconds>( \
+               msgpack_decoding \
+        ).count() << " ms " << std::endl;
+    std::cout << "RUNTIME of " << "tile_decoding" << ": " << \
+        std::chrono::duration_cast<std::chrono::milliseconds>( \
+               tile_decoding \
+        ).count() << " ms " << std::endl;
+    std::cout << "RUNTIME of " << "tile_mapping" << ": " << \
+        std::chrono::duration_cast<std::chrono::milliseconds>( \
+               tile_mapping \
+        ).count() << " ms " << std::endl;
+    std::cout << "RUNTIME of " << "protobuf_decoding" << ": " << \
+        std::chrono::duration_cast<std::chrono::milliseconds>( \
+               this->tileReader.protobuf_decode \
+        ).count() << " ms " << std::endl;
+#endif
+
     this->info();
 
 }

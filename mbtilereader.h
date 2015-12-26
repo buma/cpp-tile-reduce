@@ -5,6 +5,9 @@
 #include <sqlite3.h>
 #include <vector>
 #include <tuple>
+#ifdef TIMING
+#include <chrono>
+#endif
 
 #include "tiledata.hpp"
 typedef std::tuple<unsigned, unsigned,int> TileTuple;
@@ -29,6 +32,9 @@ public:
         }
     }
     std::string get_filename() const;
+#ifdef TIMING
+    std::chrono::nanoseconds protobuf_decode;
+#endif
 
 private:
     sqlite3 *db;

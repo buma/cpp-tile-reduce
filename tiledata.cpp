@@ -46,9 +46,19 @@ void TileData::init(mapnik::vector::tile &vector_tile, int z, unsigned x, unsign
     }
 }
 
-TileData::TileData(std::string & message, int z, unsigned x, unsigned y) {
+TileData::TileData(std::string & message, int z, unsigned x, unsigned y
+                   #ifdef TIMING
+                       , std::chrono::nanoseconds & protobuf_decode
+                   #endif
+                   ) {
     mapnik::vector::tile tile;
-    handle(message, z, x, y, tile);
+#ifdef TIMING
+    auto start = std::chrono::high_resolution_clock::now();
+#endif
+    handle(message.data(), message.size(), z, x, y, tile);
+#ifdef TIMING
+    protobuf_decode+=(std::chrono::high_resolution_clock::now()-start);
+#endif
     this->init(tile, z, x, y);
 }
 
