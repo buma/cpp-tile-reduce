@@ -48,7 +48,7 @@ void TileData::init(mapnik::vector::tile &vector_tile, int z, unsigned x, unsign
 
 TileData::TileData(std::string & message, int z, unsigned x, unsigned y
                    #ifdef TIMING
-                       , std::chrono::nanoseconds & protobuf_decode
+                       , TimeMeasure & timeMeasure
                    #endif
                    ) {
     mapnik::vector::tile tile;
@@ -57,14 +57,14 @@ TileData::TileData(std::string & message, int z, unsigned x, unsigned y
 #endif
     handle(message.data(), message.size(), z, x, y, tile);
 #ifdef TIMING
-    protobuf_decode+=(std::chrono::high_resolution_clock::now()-start);
+    timeMeasure.protobuf_decode+=(std::chrono::high_resolution_clock::now()-start);
 #endif
     this->init(tile, z, x, y);
 }
 
 TileData::TileData(const char * data, std::size_t size, int z, unsigned x, unsigned y
                    #ifdef TIMING
-                       , std::chrono::nanoseconds & protobuf_decode
+                       , TimeMeasure & timeMeasure
                    #endif
                    ) {
     mapnik::vector::tile tile;
@@ -73,7 +73,7 @@ TileData::TileData(const char * data, std::size_t size, int z, unsigned x, unsig
 #endif
     handle(data, size, z, x, y, tile);
 #ifdef TIMING
-    protobuf_decode+=(std::chrono::high_resolution_clock::now()-start);
+    timeMeasure.protobuf_decode+=(std::chrono::high_resolution_clock::now()-start);
 #endif
     this->init(tile, z, x, y);
 }

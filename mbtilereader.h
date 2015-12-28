@@ -7,6 +7,7 @@
 #include <tuple>
 #ifdef TIMING
 #include <chrono>
+#include "timemeasure.hpp"
 #endif
 
 #include "tiledata.hpp"
@@ -33,7 +34,7 @@ public:
     }
     std::string get_filename() const;
 #ifdef TIMING
-    std::chrono::nanoseconds protobuf_decode;
+    TimeMeasure timeMeasure;
 #endif
 
 private:

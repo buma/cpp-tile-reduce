@@ -42,5 +42,6 @@ HEADERS += \
     zmq_worker.hpp \
     utils.hpp \
     stdout_server.hpp \
-    stdout_worker.hpp
+    stdout_worker.hpp \
+    timemeasure.hpp
 

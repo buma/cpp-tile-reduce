@@ -8,6 +8,7 @@
 #include "generated/vector_tile.pb.hpp"
 #ifdef TIMING
 #include <chrono>
+#include "timemeasure.hpp"
 #endif
 
 
@@ -18,12 +19,12 @@ public:
     TileData(mapnik::vector::tile &vector_tile, int z, unsigned x, unsigned y);
     TileData(std::string &message, int z, unsigned x, unsigned y
          #ifdef TIMING
-             , std::chrono::nanoseconds & protobuf_decode
+             , TimeMeasure & timeMeasure
          #endif
              );
     TileData(const char * data, std::size_t size, int z, unsigned x, unsigned y
          #ifdef TIMING
-             , std::chrono::nanoseconds & protobuf_decode
+             , TimeMeasure & timeMeasure
          #endif
              );
     friend std::ostream& operator<<(std::ostream&, const TileData&);

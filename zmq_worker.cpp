@@ -117,14 +117,15 @@ void ZMQ_Worker::run() {
         std::chrono::duration_cast<std::chrono::milliseconds>( \
                tile_decoding \
         ).count() << " ms " << std::endl;
+    std::cout << "\tRUNTIME of " << "protobuf_decoding" << ": " << \
+        std::chrono::duration_cast<std::chrono::milliseconds>( \
+               this->tileReader.timeMeasure.protobuf_decode \
+        ).count() << " ms " << std::endl;
     std::cout << "RUNTIME of " << "tile_mapping" << ": " << \
         std::chrono::duration_cast<std::chrono::milliseconds>( \
                tile_mapping \
         ).count() << " ms " << std::endl;
-    std::cout << "RUNTIME of " << "protobuf_decoding" << ": " << \
-        std::chrono::duration_cast<std::chrono::milliseconds>( \
-               this->tileReader.protobuf_decode \
-        ).count() << " ms " << std::endl;
+
 #endif
 
     this->info();
