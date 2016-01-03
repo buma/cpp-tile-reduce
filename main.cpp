@@ -19,6 +19,7 @@ R"(CPP worker
           cpp-worker worker [zmq | output] <mbtiles>
           cpp-worker server [zmq | output] (<mbtiles> | (--bbox <minLon> <minLat> <maxLon> <maxLat>))
           cpp-worker collector
+          cpp-worker test
           cpp-worker (-h | --help)
           cpp-worker --version
 
@@ -46,6 +47,12 @@ int main(int argc, const char** argv) {
             = docopt::docopt(USAGE, {argv + 1, argv + argc}, true, "Tile reduce 0.1");
     for (auto const & arg: args) {
         std::cerr << arg.first << " " << arg.second << std::endl;
+    }
+    if (args["test"].asBool()) {
+        MBTileReader mbt("/home/mabu/programiranje/osm-qa/data/slovenia.mbtiles");
+        auto out = mbt.get_json_tile(12, 2225, 1447);
+        std::cout << out << std::endl;
+        std::exit(EXIT_SUCCESS);
     }
     bool is_server = args["server"].asBool();
     bool is_worker = args["worker"].asBool();

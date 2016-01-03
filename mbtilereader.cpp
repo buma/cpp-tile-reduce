@@ -3,6 +3,7 @@
 extern "C" {
     #include "tippecanoe/projection.h"
 }
+#include "tippecanoe/decode.hpp"
 
 
 MBTileReader::MBTileReader(const std::string & filepath)
@@ -54,6 +55,80 @@ std::unique_ptr<TileData> MBTileReader::get_tile(int z, unsigned x, unsigned y)
     sqlite3_finalize(stmt);
     return tileData;
 }
+
+json MBTileReader::get_json_tile(int z, unsigned x, unsigned y)
+{
+    //std::cerr << "get_tile (z,x,y) " << z << " " << x << " " << y << std::endl;
+    json tileData;
+        sqlite3_stmt *stmt;
+        if (sqlite3_prepare_v2(this->db, MBTileReader::sql.c_str(), -1, &stmt, NULL) != SQLITE_OK) {
+            fprintf(stderr, "%s: select failed: %s\n", this->filename.c_str(), sqlite3_errmsg(db));
+            exit(EXIT_FAILURE);
+        }
+
+        sqlite3_bind_int(stmt, 1, z);
+        sqlite3_bind_int(stmt, 2, x);
+        sqlite3_bind_int(stmt, 3, (1LL << z) - 1 - y);
+
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            int len = sqlite3_column_bytes(stmt, 0);
+            const char *s = (const char *) sqlite3_column_blob(stmt, 0);
+
+            /*if (z != oz) {
+                fprintf(stderr, "%s: Warning: using tile %d/%u/%u instead of %d/%u/%u\n", fname, z, x, y, oz, ox, oy);
+            }*/
+
+            //std::cerr << "LEN" << len << std::endl;
+            //auto data = std::string(s, len);
+
+            //tileData["osm"]["osm"] = {{"version", 1}, {"name", "osm"}};
+            //tileData["osm"] = json::array();
+
+            mapnik::vector::tile vector_tile;
+
+
+        #ifdef TIMING
+            auto start = std::chrono::high_resolution_clock::now();
+        #endif
+            handle(s, len, z, x, y, vector_tile);
+        #ifdef TIMING
+            timeMeasure.protobuf_decode+=(std::chrono::high_resolution_clock::now()-start);
+        #endif
+            for(auto&& layer : vector_tile.layers()) {
+                //tileData["osm"][layer.name()]
+                json json_layer = {
+                    {"version", layer.version()},
+                    {"name", layer.name()},
+                    {"extent", layer.extent()},
+                    {"length", layer.features_size()}
+                };
+                for(int i=0; i < layer.features_size(); i++) {
+                    auto feature = layer.features(i);
+                    json json_feature;
+                    json_feature["properties"] = json::object();
+                    for(int idx=0; idx < feature.tags_size(); idx+=2) {
+                        auto key = layer.keys(feature.tags(idx));
+                        auto value_type = layer.values(feature.tags(idx+1));
+                        if (value_type.has_double_value()) {
+                            json_feature["properties"][key]=(long)value_type.double_value();
+                        } else if(value_type.has_string_value()) {
+                            json_feature["properties"][key]=value_type.string_value();
+                        }
+                    }
+                    json_layer["_features"].push_back(json_feature);
+                }
+                tileData["osm"][layer.name()] = json_layer;
+            }
+            //tileData = std::unique_ptr<TileData>(new TileData(s, len, z, x, y, timeMeasure));
+
+
+        }
+
+        sqlite3_finalize(stmt);
+        return tileData;
+}
+
+
 
 /**
  * @brief MBTileReader::get_tiles_inside

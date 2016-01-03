@@ -2,6 +2,8 @@
 #include <thread>
 #include <msgpack.hpp>
 #include "zmq_worker.hpp"
+#include "json.hpp"
+
 
 ZMQ_Worker::ZMQ_Worker(std::string filepath, Transport transport) : Worker(filepath),
     _transport(transport),
@@ -35,7 +37,11 @@ void ZMQ_Worker::run() {
     std::chrono::nanoseconds tile_decoding(0);
     std::chrono::nanoseconds tile_mapping(0);
 #endif
+#ifdef JSON
+    nlohmann::json tileData;
+#else
     std::unique_ptr<TileData> tileData;
+#endif
     auto poll_pull = CpperoMQ::isReceiveReady(pull_socket, [&](){
         bool more = true;
         while(more) {
@@ -61,15 +67,23 @@ void ZMQ_Worker::run() {
 #endif
                 //std::cout << "R: " << this->received_tiles << " " << deserialized << std::endl;
                 //z x y
+#ifdef JSON
+                tileData = this->tileReader.get_json_tile(std::get<2>(dst), std::get<0>(dst), std::get<1>(dst));
+#else
                 tileData = this->tileReader.get_tile(std::get<2>(dst), std::get<0>(dst), std::get<1>(dst));
+#endif
 #ifdef TIMING
                 tile_decoding+=(std::chrono::high_resolution_clock::now()-start);
 #endif
-                if (tileData) {
+                if (true) {
 #ifdef TIMING
                     start = std::chrono::high_resolution_clock::now();
 #endif
+#ifdef JSON
+                    send(0);
+#else
                     map(std::move(tileData));
+#endif
 #ifdef TIMING
                     tile_mapping+=(std::chrono::high_resolution_clock::now()-start);
 #endif

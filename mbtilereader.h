@@ -5,6 +5,7 @@
 #include <sqlite3.h>
 #include <vector>
 #include <tuple>
+#include "json.hpp"
 #ifdef TIMING
 #include <chrono>
 #include "timemeasure.hpp"
@@ -13,6 +14,7 @@
 #include "tiledata.hpp"
 typedef std::tuple<unsigned, unsigned,int> TileTuple;
 typedef std::vector<TileTuple> TileList;
+using json = nlohmann::json;
 
 
 class MBTileReader
@@ -21,6 +23,7 @@ public:
     MBTileReader();
     MBTileReader(const std::string & filepath);
     std::unique_ptr<TileData> get_tile(int z, unsigned x, unsigned y);
+    json get_json_tile(int z, unsigned x, unsigned y);
     static TileList get_tiles_inside_bbox(float minLon, float minLat, float maxLon, float maxLat, int zoom=12);
     TileList get_all_tiles(int zoom=-1) const;
 

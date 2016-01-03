@@ -5,7 +5,7 @@ CONFIG -= qt
 
 QMAKE_CXXFLAGS_RELEASE = -march=native -O2 -fstack-protector-strong
 
-DEFINES += TIMING
+DEFINES += TIMING JSON
 
 SOURCES += main.cpp \
     msgpack_test.cpp \
@@ -24,7 +24,7 @@ SOURCES += main.cpp \
     stdout_worker.cpp \
     utils.cpp
 
-INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include /home/mabu/programiranje/cpp/CpperoMQ/include /home/mabu/programiranje/cpp/docopt.cpp
+INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include /home/mabu/programiranje/cpp/CpperoMQ/include /home/mabu/programiranje/cpp/docopt.cpp /home/mabu/programiranje/cpp/json/src
 
 LIBS += -lzmq -lprotobuf -lm -lz -lgeos -lsqlite3 -pthread -L/home/mabu/programiranje/cpp/docopt.cpp/build -ldocopt
 
