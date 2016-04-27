@@ -1,4 +1,7 @@
 #include "stdout_worker.hpp"
+#ifdef PROFILE
+#include <gperftools/heap-profiler.h>
+#endif
 
 
 Stdout_Worker::Stdout_Worker(std::string filepath) :
@@ -9,6 +12,10 @@ Stdout_Worker::Stdout_Worker(std::string filepath) :
 
 void Stdout_Worker::run() {
     std::cerr << "Waiting:" << std::endl;
+#ifdef PROFILE
+    //ProfilerStart("zmq_worker.log");
+    HeapProfilerStart("worker_heap_2.log");
+#endif
     std::string line;
     unsigned x, y;
     int z;
@@ -20,6 +27,11 @@ void Stdout_Worker::run() {
           line_stream >> y;
           line_stream >> z;
           auto tileData = this->tileReader.get_tile(z, x, y);
+#ifdef PROFILE
+          if (this->received_tiles%50==0) {
+            HeapProfilerDump("TileRead");
+          }
+#endif
           this->received_tiles++;
           if (tileData) {
               //std::cerr << " Found tile" << std::endl;
@@ -29,6 +41,10 @@ void Stdout_Worker::run() {
           }
         }
     }
+#ifdef PROFILE
+    HeapProfilerStop();
+    //ProfilerStop();
+#endif
 }
 
 void Stdout_Worker::info() {
