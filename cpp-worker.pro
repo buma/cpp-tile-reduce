@@ -4,8 +4,10 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 QMAKE_CXXFLAGS_RELEASE = -march=native -O2 -fstack-protector-strong
+QMAKE_CXXFLAGS_DEBUG = -march=native -O2 -fno-omit-frame-pointer
 
-DEFINES += TIMING JSON
+#DEFINES += TIMING JSON
+#DEFINES +=PYTHON
 
 SOURCES += main.cpp \
     msgpack_test.cpp \
@@ -27,6 +29,8 @@ SOURCES += main.cpp \
 INCLUDEPATH = /home/mabu/programiranje/cpp/msgpack-c/include /home/mabu/programiranje/cpp/CpperoMQ/include /home/mabu/programiranje/cpp/docopt.cpp /home/mabu/programiranje/cpp/json/src
 
 LIBS += -lzmq -lprotobuf -lm -lz -lgeos -lsqlite3 -pthread -L/home/mabu/programiranje/cpp/docopt.cpp/build -ldocopt
+#LIBS += -ltcmalloc
+# -lprofiler
 
 HEADERS += \
     tiledata.hpp \
