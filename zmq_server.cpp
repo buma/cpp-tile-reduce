@@ -89,8 +89,8 @@ void ZMQ_Server::run(bool start_workers, unsigned int num_workers) {
         try {
             auto tile = this->get_tile();
 
-            std::cout << "S: " << this->sent_tiles << " tile ";
-            std::cout << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile) << std::endl;
+            //std::cout << "S: " << this->sent_tiles << " tile ";
+            //std::cout << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile) << std::endl;
             //std::stringstream buffer;
 
             //buffer << std::get<0>(tile) << ", " << std::get<1>(tile) << ", " << std::get<2>(tile);
@@ -187,6 +187,7 @@ void ZMQ_Server::run(bool start_workers, unsigned int num_workers) {
 #endif
     std::cout << "Sent: " << this->sent_tiles << std::endl;
     std::cout << "Rec: " << this->received_tiles << std::endl;
+    std::cout << "Sum: " << sum << std::endl;
 
 }
 
