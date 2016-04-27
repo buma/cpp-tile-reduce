@@ -15,10 +15,11 @@ Stdout_Server::Stdout_Server(std::string filepath, int zoom)
 }
 
 void Stdout_Server::run(bool start_workers, unsigned int workers) {
-    //Without this tasks get sent only to the first worker
-    /*std::cerr << "Press Enter when the workers are ready: " << std::endl;
-    getchar();
-    std::cerr << "Sending tasks to workers...\n" << std::endl;*/
+    if (!start_workers) {
+        std::cout << "Press Enter when the workers are ready: " << std::endl;
+        getchar();
+        std::cout << "Sending tasks to workers...\n" << std::endl;
+    }
     for (const auto& tile: *this->tileList.get()) {
         std::cout << "[" << std::get<0>(tile) << " " << std::get<1>(tile) << " " << std::get<2>(tile) << std::endl;
     }
