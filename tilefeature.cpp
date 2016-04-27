@@ -22,9 +22,8 @@ TileFeature::TileFeature(int tag_number)
 
 void TileFeature::addTag(std::string & key, const mapnik::vector::tile_value & value) {
     //TODO: fix copies
-    //long values seems to be doubles in protobuf file
-    if (value.has_double_value()) {
-        this->long_tags[key] = value.double_value();
+    if (value.has_int_value()) {
+        this->long_tags[key] = value.int_value();
     } else if (value.has_string_value()) {
         this->string_tags[key] = value.string_value();
     } else {
