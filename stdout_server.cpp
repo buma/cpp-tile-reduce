@@ -21,6 +21,7 @@ void Stdout_Server::run(bool start_workers, unsigned int workers) {
         std::cout << "Sending tasks to workers...\n" << std::endl;
     }
     for (const auto& tile: *this->tileList.get()) {
-        std::cout << "[" << std::get<0>(tile) << " " << std::get<1>(tile) << " " << std::get<2>(tile) << std::endl;
+        std::cout << "[" << std::get<0>(tile) << " " << std::get<1>(tile) << " " << std::get<2>(tile) << "\n";
     }
+
 }
