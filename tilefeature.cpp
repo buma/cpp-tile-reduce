@@ -11,12 +11,12 @@ TileFeature::TileFeature()
     //-timestamp
     //-uid
     //version
-    this->long_tags.reserve(5);
+    this->long_tags.reserve(6);
 }
 
 TileFeature::TileFeature(int tag_number)
 {
-    this->long_tags.reserve(5);
+    this->long_tags.reserve(6);
     this->string_tags.reserve(tag_number);
 }
 
